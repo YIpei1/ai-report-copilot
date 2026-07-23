@@ -1,0 +1,48 @@
+:root {
+  // Layout（布局颜色）
+  // 侧边栏背景
+  --sidebar-bg: #001529;
+  // 侧边栏文字
+  --sidebar-text: #ffffff;
+  // 侧边栏选中背景
+  --sidebar-active-bg: #1677ff;
+  // 侧边栏 hover
+  --sidebar-hover-bg: rgba(255,255,255,0.08);
+
+  // Header（顶部导航）
+  // 顶部背景
+  --header-bg: #ffffff;
+  // 顶部文字
+  --header-text: #303133;
+  // 顶部边框
+  --header-border: #e4e7ed;
+
+  // Content（内容区域）
+  // 页面背景
+  --page-bg: #f5f7fa;
+  // 卡片背景
+  --card-bg: #ffffff;
+  // Text（文字）
+  --text-primary: #303133;
+  --text-secondary: #606266;
+}
+.dark {
+  // Sidebar
+  --sidebar-bg:#141414;
+  --sidebar-text:#ffffff;
+  --sidebar-active-bg:#1677ff;
+  --sidebar-hover-bg:rgba(255,255,255,0.06);
+
+  // Header
+  --header-bg:#1f1f1f;
+  --header-text:#ffffff;
+  --header-border:#303030;
+
+  // Content
+  --page-bg:#141414;
+  --card-bg:#1f1f1f;
+
+  // Text
+  --text-primary:#ffffff;
+  --text-secondary:#a3a3a3;
+}

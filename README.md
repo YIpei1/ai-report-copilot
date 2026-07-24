@@ -10,7 +10,7 @@
 - `Sass / SCSS`
 - `unplugin-auto-import`
 - `unplugin-vue-components`
-- `eslint`
+- `eslint + @eslint/js globals typescript-eslint eslint-plugin-vue eslint-config-prettier`
 
 ## 运行要求
 

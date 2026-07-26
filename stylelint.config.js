@@ -1,0 +1,7 @@
+export default {
+    extends: ['stylelint-config-standard-scss', 'stylelint-config-recommended-vue/scss'],
+
+    ignoreFiles: ['dist/**', 'node_modules/**', 'coverage/**'],
+
+    rules: {},
+}

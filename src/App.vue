@@ -3,3 +3,8 @@
 <template>
     <RouterView />
 </template>
+<style>
+.page {
+    color: red;
+}
+</style>

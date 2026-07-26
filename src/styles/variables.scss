@@ -1,24 +1,32 @@
 // Layout（布局）
 // Header（顶部导航栏）高度
 $header-height: 64px;
+
 // Sidebar（侧边栏）宽度
 $sidebar-width: 240px;
+
 // Sidebar 收起宽度
 $sidebar-collapse-width: 64px;
+
 // 页面最小宽度
 $page-min-width: 1200px;
 
 // Spacing（间距）
 // 超小间距
 $space-xs: 4px;
+
 // 小间距
 $space-sm: 8px;
+
 // 默认间距
 $space-md: 16px;
+
 // 大间距
 $space-lg: 24px;
+
 // 超大间距
 $space-xl: 32px;
+
 // 特大间距
 $space-xxl: 48px;
 
@@ -44,12 +52,16 @@ $font-weight-bold: 700;
 // Z-index（层级）
 // Header
 $z-header: 100;
+
 // Sidebar
 $z-sidebar: 200;
+
 // Dropdown
 $z-dropdown: 500;
+
 // Dialog
 $z-dialog: 1000;
+
 // Message
 $z-message: 2000;
 

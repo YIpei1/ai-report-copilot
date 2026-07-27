@@ -58,6 +58,7 @@ export default [
     // 8. 项目自定义规则
     {
         rules: {
+            'no-undef': 'off',
             'no-debugger': 'warn',
             'vue/multi-word-component-names': 'off',
             'vue/block-order': [

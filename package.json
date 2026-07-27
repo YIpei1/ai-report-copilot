@@ -3,6 +3,10 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
+    "engines": {
+        "node": ">=22.14.0 <23",
+        "pnpm": ">=10.6.5 <11"
+    },
     "scripts": {
         "verify": "pnpm format:check && pnpm lint && pnpm lint:style && pnpm build",
         "dev": "vite",

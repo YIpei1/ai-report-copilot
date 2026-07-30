@@ -59,6 +59,7 @@
         "globals": "^17.7.0",
         "husky": "^9.1.7",
         "lint-staged": "^17.1.1",
+        "msw": "^2.15.0",
         "postcss-html": "^1.8.1",
         "postcss-scss": "^4.0.9",
         "prettier": "^3.9.6",
@@ -73,5 +74,10 @@
         "vite": "^8.1.1",
         "vite-plugin-vue-setup-extend": "^0.4.0",
         "vue-tsc": "^3.3.5"
+    },
+    "msw": {
+        "workerDirectory": [
+            "public"
+        ]
     }
 }

@@ -1,20 +1,11 @@
 <template>
     <main class="login-page">
         <section class="login-panel">
-            <header
-                class="page-brand brand"
-                aria-label="AI Report Copilot"
-            >
-                <div
-                    class="brand__mark"
-                    aria-hidden="true"
-                >
+            <header class="page-brand brand" aria-label="AI Report Copilot">
+                <div class="brand__mark" aria-hidden="true">
                     <span class="brand__spark brand__spark--one"></span>
                     <span class="brand__spark brand__spark--two"></span>
-                    <img
-                        :src="loginBrandIcon"
-                        alt=""
-                    />
+                    <img :src="loginBrandIcon" alt="" />
                 </div>
                 <div class="page-brand__copy">
                     <strong class="brand__name">AI Report Copilot</strong>
@@ -37,10 +28,7 @@
                     class="login-form"
                     @submit.prevent="submitLogin"
                 >
-                    <el-form-item
-                        label="用户名"
-                        prop="account"
-                    >
+                    <el-form-item label="用户名" prop="account">
                         <el-input
                             v-model="loginForm.account"
                             :prefix-icon="User"
@@ -50,10 +38,7 @@
                         />
                     </el-form-item>
 
-                    <el-form-item
-                        label="密码"
-                        prop="password"
-                    >
+                    <el-form-item label="密码" prop="password">
                         <RegexInput
                             v-model="loginForm.password"
                             format="password"
@@ -67,11 +52,7 @@
 
                     <div class="form-options">
                         <el-checkbox v-model="loginForm.remember">记住我</el-checkbox>
-                        <button
-                            type="button"
-                            class="text-button"
-                            @click="handleForgotPassword"
-                        >
+                        <button type="button" class="text-button" @click="handleForgotPassword">
                             忘记密码？
                         </button>
                     </div>
@@ -84,20 +65,12 @@
                         class="login-button"
                     >
                         登录
-                        <span
-                            v-if="!isSubmitting"
-                            class="login-button__arrow"
-                            >→</span
-                        >
+                        <span v-if="!isSubmitting" class="login-button__arrow">→</span>
                     </el-button>
                 </el-form>
 
                 <div class="security-tip">
-                    <img
-                        :src="securityShieldIcon"
-                        alt=""
-                        aria-hidden="true"
-                    />
+                    <img :src="securityShieldIcon" alt="" aria-hidden="true" />
                     <span>企业级数据加密，保障账户与报告安全</span>
                 </div>
             </div>

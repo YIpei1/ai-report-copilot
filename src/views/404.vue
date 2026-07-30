@@ -4,15 +4,9 @@
         <div class="not-found__decoration not-found__decoration--right"></div>
 
         <section class="not-found__content">
-            <div
-                class="error-code"
-                aria-label="404"
-            >
+            <div class="error-code" aria-label="404">
                 <span>4</span>
-                <div
-                    class="error-code__planet"
-                    aria-hidden="true"
-                >
+                <div class="error-code__planet" aria-hidden="true">
                     <div class="error-code__orbit"></div>
                     <div class="error-code__face">
                         <i></i>
@@ -29,18 +23,8 @@
             </p>
 
             <div class="not-found__actions">
-                <RouterLink
-                    to="/home"
-                    class="primary-button"
-                    >返回首页</RouterLink
-                >
-                <button
-                    type="button"
-                    class="secondary-button"
-                    @click="goBack"
-                >
-                    返回上一页
-                </button>
+                <RouterLink to="/home" class="primary-button">返回首页</RouterLink>
+                <button type="button" class="secondary-button" @click="goBack">返回上一页</button>
             </div>
         </section>
 

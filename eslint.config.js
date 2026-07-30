@@ -69,7 +69,15 @@ export default [
             ],
         },
     },
+    // 9. 针对特定文件的规则覆盖
+    {
+        files: ['src/types/axios.d.ts'],
+        rules: {
+            '@typescript-eslint/no-unused-vars': 'off',
+            '@typescript-eslint/no-explicit-any': 'off',
+        },
+    },
 
-    // 9. 关闭与 Prettier 冲突的格式规则
+    //  关闭与 Prettier 冲突的格式规则
     eslintConfigPrettier,
 ]

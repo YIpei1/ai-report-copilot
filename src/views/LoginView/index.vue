@@ -1,32 +1,20 @@
 <template>
     <main class="login-page">
         <section class="login-panel">
-            <header class="page-brand brand" aria-label="AI Report Copilot">
-                <div class="brand__mark" aria-hidden="true">
+            <header
+                class="page-brand brand"
+                aria-label="AI Report Copilot"
+            >
+                <div
+                    class="brand__mark"
+                    aria-hidden="true"
+                >
                     <span class="brand__spark brand__spark--one"></span>
                     <span class="brand__spark brand__spark--two"></span>
-                    <svg viewBox="0 0 32 32" fill="none">
-                        <path
-                            d="M9.2 8.5h13.6A3.2 3.2 0 0 1 26 11.7v8.6a3.2 3.2 0 0 1-3.2 3.2H14l-5.9 4v-4.1A3.2 3.2 0 0 1 5 20.3v-8.6a3.2 3.2 0 0 1 3.2-3.2h1"
-                            stroke="currentColor"
-                            stroke-width="2.2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                        <path
-                            d="M11.5 16h2.8l1.8-3.7 2.2 7.4 1.8-3.7h2.4"
-                            stroke="currentColor"
-                            stroke-width="2.2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                        <path
-                            d="M16 3.5v2.2M10.7 4.6l1.1 1.8M21.3 4.6l-1.1 1.8"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                        />
-                    </svg>
+                    <img
+                        :src="loginBrandIcon"
+                        alt=""
+                    />
                 </div>
                 <div class="page-brand__copy">
                     <strong class="brand__name">AI Report Copilot</strong>
@@ -49,23 +37,28 @@
                     class="login-form"
                     @submit.prevent="submitLogin"
                 >
-                    <el-form-item label="账号" prop="account">
+                    <el-form-item
+                        label="用户名"
+                        prop="account"
+                    >
                         <el-input
-                            v-model.trim="loginForm.account"
+                            v-model="loginForm.account"
                             :prefix-icon="User"
-                            placeholder="请输入手机号或邮箱"
+                            placeholder="请输入用户名"
                             size="large"
                             autocomplete="username"
                         />
                     </el-form-item>
 
-                    <el-form-item label="密码" prop="password">
-                        <el-input
+                    <el-form-item
+                        label="密码"
+                        prop="password"
+                    >
+                        <RegexInput
                             v-model="loginForm.password"
+                            format="password"
                             :prefix-icon="Lock"
                             placeholder="请输入登录密码"
-                            type="password"
-                            show-password
                             size="large"
                             autocomplete="current-password"
                             @keyup.enter="submitLogin"
@@ -74,7 +67,11 @@
 
                     <div class="form-options">
                         <el-checkbox v-model="loginForm.remember">记住我</el-checkbox>
-                        <button type="button" class="text-button" @click="handleForgotPassword">
+                        <button
+                            type="button"
+                            class="text-button"
+                            @click="handleForgotPassword"
+                        >
                             忘记密码？
                         </button>
                     </div>
@@ -87,26 +84,20 @@
                         class="login-button"
                     >
                         登录
-                        <span v-if="!isSubmitting" class="login-button__arrow">→</span>
+                        <span
+                            v-if="!isSubmitting"
+                            class="login-button__arrow"
+                            >→</span
+                        >
                     </el-button>
                 </el-form>
 
                 <div class="security-tip">
-                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <path
-                            d="M10 2.2 16 4.5v4.3c0 4-2.4 7-6 8.8-3.6-1.8-6-4.8-6-8.8V4.5l6-2.3Z"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linejoin="round"
-                        />
-                        <path
-                            d="m7.5 9.8 1.7 1.7 3.5-3.7"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
+                    <img
+                        :src="securityShieldIcon"
+                        alt=""
+                        aria-hidden="true"
+                    />
                     <span>企业级数据加密，保障账户与报告安全</span>
                 </div>
             </div>
@@ -126,6 +117,8 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { Lock, User } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { login } from '@/api/login'
+import loginBrandIcon from '@/assets/icons/login-brand.svg'
+import securityShieldIcon from '@/assets/icons/security-shield.svg'
 
 const loginFormRef = ref<FormInstance>()
 const isSubmitting = ref(false)
@@ -163,11 +156,8 @@ const submitLogin = async () => {
             account: loginForm.account,
             password: loginForm.password,
         })
-
         ElMessage.success(`欢迎回来,${response.data.username}`)
         await router.push('/home')
-    } catch (error) {
-        ElMessage.error(error instanceof Error ? error.message : '登录失败，请稍后重试')
     } finally {
         isSubmitting.value = false
     }
@@ -213,14 +203,13 @@ const handleForgotPassword = () => {
         display: grid;
         width: 46px;
         height: 46px;
-        color: #fff;
         background: linear-gradient(135deg, #4285ff, #8a60ee);
         border: 1px solid rgb(255 255 255 / 36%);
         border-radius: 14px;
         box-shadow: 0 10px 28px rgb(4 12 40 / 25%);
         place-items: center;
 
-        svg {
+        img {
             width: 31px;
             height: 31px;
         }
@@ -439,10 +428,9 @@ const handleForgotPassword = () => {
     color: #9aa2b2;
     font-size: 11px;
 
-    svg {
+    img {
         width: 16px;
         height: 16px;
-        color: #7f88a0;
     }
 }
 

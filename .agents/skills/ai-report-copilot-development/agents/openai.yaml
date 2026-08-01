@@ -1,0 +1,4 @@
+interface:
+    display_name: 'AI 报告助手项目开发'
+    short_description: '按照项目架构和质量规范开发 AI 报告助手'
+    default_prompt: '使用 $ai-report-copilot-development 按照项目架构和质量门禁完成下一项开发任务。'

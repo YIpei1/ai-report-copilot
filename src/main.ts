@@ -3,7 +3,7 @@ import './styles/index.scss'
 import App from './App.vue'
 import router from './router'
 import 'element-plus/dist/index.css'
-import { createPinia } from 'pinia'
+import pinia from './stores'
 
 async function enableMocking() {
     // 判断启动环境
@@ -20,7 +20,7 @@ async function bootstrap() {
     // mocks启动后在启动应用，确保mock接口生效
     await enableMocking()
 
-    createApp(App).use(router).use(createPinia()).mount('#app')
+    createApp(App).use(router).use(pinia).mount('#app')
 }
 
 void bootstrap()

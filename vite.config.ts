@@ -5,7 +5,7 @@ import AutoImport from 'unplugin-auto-import/vite'
 import path from 'node:path'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import * as vueSetupExtendModule from 'vite-plugin-vue-setup-extend'
-
+import vueDevTools from 'vite-plugin-vue-devtools'
 const vueSetupExtend = vueSetupExtendModule.default as unknown as (options?: {
     name?: boolean
 }) => Plugin
@@ -13,9 +13,17 @@ const vueSetupExtend = vueSetupExtendModule.default as unknown as (options?: {
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [
+        vueDevTools({
+            launchEditor: 'code',
+        }),
         vue(),
         vueSetupExtend(),
         AutoImport({
+            imports: [
+                {
+                    'element-plus': ['ElMessage', 'ElMessageBox'],
+                },
+            ],
             resolvers: [ElementPlusResolver()],
         }),
 

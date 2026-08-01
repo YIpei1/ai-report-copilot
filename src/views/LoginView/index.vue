@@ -92,6 +92,7 @@ import { useRouter } from 'vue-router'
 import { login } from '@/api/login'
 import loginBrandIcon from '@/assets/icons/login-brand.svg'
 import securityShieldIcon from '@/assets/icons/security-shield.svg'
+import { useAuthStore } from '@/stores/modules/auth'
 
 const loginFormRef = ref<FormInstance>()
 const isSubmitting = ref(false)
@@ -130,6 +131,12 @@ const submitLogin = async () => {
             password: loginForm.password,
         })
         ElMessage.success(`欢迎回来,${response.data.username}`)
+
+        const { setTokens } = useAuthStore()
+        setTokens({
+            accessToken: response.data.accessToken,
+            refreshToken: response.data.refreshToken,
+        })
         await router.push('/home')
     } finally {
         isSubmitting.value = false

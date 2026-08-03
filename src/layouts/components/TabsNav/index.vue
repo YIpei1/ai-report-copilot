@@ -202,7 +202,7 @@ const toggleTheme = () => {
 }
 
 const addVisitedTab = (targetRoute: RouteLocationNormalizedLoaded): void => {
-    if (['/login', '/403'].includes(targetRoute.path)) {
+    if (targetRoute.meta.isTabsNav) {
         return
     }
 

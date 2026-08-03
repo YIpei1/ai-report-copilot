@@ -32,18 +32,18 @@ export const constantRoutes: RouteRecordRaw[] = [
         path: '/403',
         name: 'Forbidden',
         component: () => import('@/views/Error/403.vue'),
-        meta: { title: '无访问权限', hidden: true },
+        meta: { title: '无访问权限', hidden: true, isTabsNav: true },
     },
     {
         path: '/404',
         name: 'NotFound',
         component: () => import('@/views/Error/404.vue'),
-        meta: { title: '页面不存在', hidden: true },
+        meta: { title: '页面不存在', hidden: true, isTabsNav: true },
     },
     {
         path: '/login',
         name: 'Login',
         component: () => import('@/views/LoginView/index.vue'),
-        meta: { title: '登录', hidden: true },
+        meta: { title: '登录', hidden: true, isTabsNav: true },
     },
 ]

@@ -20,7 +20,7 @@ async function bootstrap() {
     // mocks启动后在启动应用，确保mock接口生效
     await enableMocking()
 
-    createApp(App).use(router).use(pinia).mount('#app')
+    createApp(App).use(pinia).use(router).mount('#app')
 }
 
 void bootstrap()

@@ -9,6 +9,8 @@ declare module 'vue-router' {
         permission?: string
         // 是否在侧边栏隐藏
         hidden?: boolean
+        // 是否保留头部页签 TabsNav
+        isTabsNav?: boolean
         /***
          *  是否无需登录即可访问
          *  暂时未启用

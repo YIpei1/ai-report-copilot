@@ -89,7 +89,7 @@ import { computed, reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Lock, User } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
-import { login } from '@/api/login'
+import { login } from '@/api/auth'
 import loginBrandIcon from '@/assets/icons/login-brand.svg'
 import securityShieldIcon from '@/assets/icons/security-shield.svg'
 import { useAuthStore } from '@/stores/modules/auth'
@@ -137,7 +137,7 @@ const submitLogin = async () => {
             accessToken: response.data.accessToken,
             refreshToken: response.data.refreshToken,
         })
-        await router.push('/home')
+        await router.push('/dashboard')
     } finally {
         isSubmitting.value = false
     }

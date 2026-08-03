@@ -1,4 +1,5 @@
 import type { ApiResponse } from '@/http/requestType'
+import { useAuthStore } from '@/stores'
 import axios, { AxiosError, type AxiosRequestConfig } from 'axios'
 
 const service = axios.create({
@@ -10,7 +11,10 @@ const service = axios.create({
 // 添加请求拦截器
 service.interceptors.request.use(
     function (config) {
-        // 在发送请求之前做些什么
+        const accessToken = useAuthStore().accessToken
+        if (accessToken) {
+            config.headers.set('Authorization', `Bearer ${accessToken}`)
+        }
         return config
     },
     function (error) {

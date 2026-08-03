@@ -1,12 +1,27 @@
 import { delay, http, HttpResponse } from 'msw'
-import type { UserInfoData } from '@/api/user/types'
+import type { UserInfoData } from '@/api/auth/types'
 import type { ApiResponse } from '@/http/requestType'
-import { getCurrentMockUser } from './data/users'
+import { findMockUserByAccessToken } from './data/users'
 
 export const userHandlers = [
-    http.get('/api/user/info', async () => {
+    http.get('/api/user/info', async ({ request }) => {
         await delay(300)
-        const user = getCurrentMockUser()
+
+        const authorization = request.headers.get('Authorization')
+        const accessToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1] ?? ''
+        const user = findMockUserByAccessToken(accessToken)
+
+        if (!user) {
+            const response = {
+                code: 10002,
+                message: '登录状态无效或已过期',
+                data: null,
+            } satisfies ApiResponse<null>
+
+            return HttpResponse.json(response, {
+                status: 401,
+            })
+        }
 
         const response = {
             code: 0,

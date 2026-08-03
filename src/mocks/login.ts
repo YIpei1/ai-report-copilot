@@ -1,7 +1,13 @@
 import { delay, http, HttpResponse } from 'msw'
-import type { LoginData, LoginParams } from '@/api/login/types'
+import type { LoginData, LoginParams } from '@/api/auth/types'
 import type { ApiResponse } from '@/http/requestType'
-import { findMockUser, setCurrentMockUser } from './data/users'
+import {
+    createMockAccessToken,
+    createMockRefreshToken,
+    findMockUser,
+    MOCK_ACCESS_TOKEN_EXPIRES_IN,
+    MOCK_REFRESH_TOKEN_EXPIRES_IN,
+} from './data/users'
 
 export const authHandlers = [
     http.post('/api/login', async ({ request }) => {
@@ -23,16 +29,14 @@ export const authHandlers = [
             )
         }
 
-        setCurrentMockUser(user.userId)
-
         const response = {
             code: 0,
             message: '登录成功',
             data: {
-                accessToken: `access-${user.account}-${Date.now()}`,
-                refreshToken: `refresh-${user.account}-${Date.now()}`,
-                accessTokenExpiresIn: 2 * 60 * 60,
-                refreshTokenExpiresIn: 7 * 24 * 60 * 60,
+                accessToken: createMockAccessToken(user),
+                refreshToken: createMockRefreshToken(user),
+                accessTokenExpiresIn: MOCK_ACCESS_TOKEN_EXPIRES_IN,
+                refreshTokenExpiresIn: MOCK_REFRESH_TOKEN_EXPIRES_IN,
                 username: user.nickname,
             },
         } satisfies ApiResponse<LoginData>

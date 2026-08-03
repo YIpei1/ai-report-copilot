@@ -1,6 +1,6 @@
 // Layout（布局）
 // Header（顶部导航栏）高度
-$header-height: 64px;
+$header-height: 44px;
 
 // Sidebar（侧边栏）宽度
 $sidebar-width: 240px;
@@ -8,8 +8,47 @@ $sidebar-width: 240px;
 // Sidebar 收起宽度
 $sidebar-collapse-width: 64px;
 
-// 页面最小宽度
-$page-min-width: 1200px;
+// Sidebar 品牌区域高度
+$sidebar-brand-height: 44px;
+
+// Sidebar 品牌标识尺寸
+$sidebar-brand-mark-size: 28px;
+
+// Sidebar 菜单项高度
+$sidebar-menu-item-height: 42px;
+
+// Sidebar 菜单图标尺寸
+$sidebar-menu-icon-size: 22px;
+
+// Sidebar 用户头像尺寸
+$sidebar-user-avatar-size: 38px;
+
+// Sidebar 子菜单展开最大高度
+$sidebar-submenu-max-height: 520px;
+
+// Tabs（页签）固定宽度
+$tabs-item-width: 120px;
+
+// Tabs 默认高度
+$tabs-item-height: 28px;
+
+// Tabs 两侧滚动按钮宽度
+$tabs-scroll-button-width: 30px;
+
+// Tabs 右键菜单宽度
+$tabs-context-menu-width: 132px;
+
+// Theme Toggle（主题开关）宽度
+$theme-toggle-width: 44px;
+
+// Theme Toggle 高度
+$theme-toggle-height: 24px;
+
+// Theme Toggle 滑块尺寸
+$theme-toggle-thumb-size: 18px;
+
+// 平板端布局断点
+$breakpoint-tablet: 960px;
 
 // Spacing（间距）
 // 超小间距
@@ -35,6 +74,10 @@ $radius-sm: 4px;
 $radius-md: 8px;
 $radius-lg: 12px;
 $radius-xl: 16px;
+
+// Control Size（控件尺寸）
+$control-height-sm: 32px;
+$control-height-md: 36px;
 
 // Font Size（字体大小）
 $font-size-xs: 12px;
@@ -67,5 +110,5 @@ $z-message: 2000;
 
 // Animation（动画）
 $transition-fast: 0.15s;
-$transition-normal: 0.3s;
-$transition-slow: 0.5s;
+$transition-normal: 0.2s;
+$transition-slow: 0.3s;

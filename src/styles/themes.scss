@@ -1,16 +1,31 @@
 :root {
-    // Layout（布局颜色）
-    // 侧边栏背景
-    --sidebar-bg: #001529;
+    // Sidebar（侧边栏）
+    // 侧边栏雾蓝渐变开始色
+    --sidebar-bg: #365880;
 
-    // 侧边栏文字
-    --sidebar-text: #fff;
+    // 侧边栏雾蓝渐变结束色
+    --sidebar-bg-secondary: #4f7098;
+
+    // 侧边栏主要文字和图标
+    --sidebar-text: #f8fbff;
+
+    // 侧边栏次要文字
+    --sidebar-text-muted: rgb(239 246 255 / 78%);
 
     // 侧边栏选中背景
-    --sidebar-active-bg: #1677ff;
+    --sidebar-active-bg: #3978df;
 
-    // 侧边栏 hover
-    --sidebar-hover-bg: rgb(255 255 255 / 8%);
+    // 侧边栏悬停和控件背景
+    --sidebar-hover-bg: rgb(255 255 255 / 12%);
+
+    // 侧边栏边框
+    --sidebar-border: rgb(255 255 255 / 14%);
+
+    // 侧边栏品牌标识文字
+    --sidebar-brand-text: #294b73;
+
+    // 侧边栏品牌标识背景
+    --sidebar-brand-bg: linear-gradient(135deg, #f8fbff 0%, #dbeafe 100%);
 
     // Header（顶部导航）
     // 顶部背景
@@ -22,35 +37,90 @@
     // 顶部边框
     --header-border: #e4e7ed;
 
+    // 顶部导航标签背景
+    --header-item-bg: #fff;
+
     // Content（内容区域）
     // 页面背景
     --page-bg: #f5f7fa;
 
+    // 页面渐变结束背景
+    --page-bg-secondary: #eef3f8;
+
+    // 页面背景装饰光晕
+    --page-accent-bg: rgb(37 99 235 / 12%);
+
     // 卡片背景
     --card-bg: #fff;
 
-    // Text（文字）
+    // 卡片、浮层和控件的悬停背景
+    --surface-hover-bg: rgb(15 23 42 / 5%);
+
+    // Text（文字与图标）
+    // 主要文字
     --text-primary: #303133;
+
+    // 次要文字和悬停图标
     --text-secondary: #606266;
+
+    // 禁用文字
+    --text-disabled: #a8b1c2;
+
+    // 弱化图标
+    --icon-muted: #8a95a6;
+
+    // 在线状态标识
+    --status-success: #67c23a;
+
+    // Effect（公共效果）
+    // 布局浮层和侧边栏投影
+    --layout-shadow: rgb(34 58 91 / 18%);
+
+    // 主题切换滑块背景
+    --theme-toggle-thumb-bg: #fff;
+
+    // 主题切换滑块图标颜色
+    --theme-toggle-thumb-text: #6b7280;
+
+    // 主题切换滑块投影
+    --theme-toggle-thumb-shadow: rgb(0 0 0 / 20%);
 }
 
 .dark {
-    // Sidebar
-    --sidebar-bg: #141414;
-    --sidebar-text: #fff;
-    --sidebar-active-bg: #1677ff;
-    --sidebar-hover-bg: rgb(255 255 255 / 6%);
+    // Sidebar（侧边栏深色主题）
+    --sidebar-bg: #1e3048;
+    --sidebar-bg-secondary: #2b4360;
+    --sidebar-text: #f8fbff;
+    --sidebar-text-muted: rgb(226 232 240 / 72%);
+    --sidebar-active-bg: #4f8ee8;
+    --sidebar-hover-bg: rgb(255 255 255 / 9%);
+    --sidebar-border: rgb(255 255 255 / 12%);
+    --sidebar-brand-text: #24466e;
+    --sidebar-brand-bg: linear-gradient(135deg, #f8fbff 0%, #cfe3ff 100%);
 
-    // Header
+    // Header（顶部导航深色主题）
     --header-bg: #1f1f1f;
     --header-text: #fff;
     --header-border: #303030;
+    --header-item-bg: #262626;
 
-    // Content
+    // Content（内容区域深色主题）
     --page-bg: #141414;
+    --page-bg-secondary: #171717;
+    --page-accent-bg: rgb(22 119 255 / 10%);
     --card-bg: #1f1f1f;
+    --surface-hover-bg: rgb(255 255 255 / 8%);
 
-    // Text
+    // Text（文字与图标深色主题）
     --text-primary: #fff;
-    --text-secondary: #a3a3a3;
+    --text-secondary: #d1d5db;
+    --text-disabled: #6b7280;
+    --icon-muted: #8b94a7;
+    --status-success: #67c23a;
+
+    // Effect（公共效果深色主题）
+    --layout-shadow: rgb(0 0 0 / 35%);
+    --theme-toggle-thumb-bg: #fff;
+    --theme-toggle-thumb-text: #111827;
+    --theme-toggle-thumb-shadow: rgb(0 0 0 / 35%);
 }

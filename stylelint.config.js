@@ -3,5 +3,13 @@ export default {
 
     ignoreFiles: ['dist/**', 'node_modules/**', 'coverage/**'],
 
-    rules: {},
+    rules: {
+        'selector-class-pattern': [
+            '^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:__[a-z0-9]+(?:-[a-z0-9]+)*)?(?:--[a-z0-9]+(?:-[a-z0-9]+)*)?$',
+            {
+                resolveNestedSelectors: true,
+                message: '类名必须使用 kebab-case 或 BEM 命名',
+            },
+        ],
+    },
 }

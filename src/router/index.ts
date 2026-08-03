@@ -1,34 +1,39 @@
 import { createWebHistory, createRouter } from 'vue-router'
-
-const routes = [
-    {
-        path: '/',
-        redirect: '/home',
-    },
-    {
-        path: '/login',
-        name: 'login',
-        component: () => import('../views/LoginView/index.vue'),
-    },
-    {
-        path: '/home',
-        name: 'home',
-        component: () => import('../views/home.vue'),
-    },
-    {
-        path: '/404',
-        name: '404',
-        component: () => import('../views/404.vue'),
-    },
-    {
-        path: '/:pathMatch(.*)*',
-        redirect: '/404',
-    },
-]
-
+import { constantRoutes } from './constantRoutes'
+import { useUserStore } from '@/stores'
+import { useAuthStore } from '@/stores'
 const router = createRouter({
     history: createWebHistory(),
-    routes,
+    routes: constantRoutes,
+})
+
+// 路由守卫
+router.beforeEach(async (to) => {
+    const authStore = useAuthStore()
+    const userStore = useUserStore()
+    const isLoggedIn = authStore.isLoggedIn
+
+    if (!isLoggedIn) {
+        return to.path === '/login' ? true : '/login'
+    }
+    if (to.path === '/login') {
+        return '/dashboard'
+    }
+    if (!userStore.userInfo) {
+        try {
+            await userStore.setUserInfo()
+        } catch {
+            await authStore.clearTokens()
+            userStore.clearUserInfo()
+            return '/login'
+        }
+    }
+
+    if (to.meta.permission && !userStore.hasPermission(to.meta.permission)) {
+        return '/403'
+    }
+
+    return true
 })
 
 export default router

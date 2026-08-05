@@ -119,6 +119,7 @@ defineEmits<{
 
 const route = useRoute()
 const router = useRouter()
+const appStore = useAppStore(store)
 const authStore = useAuthStore(store)
 const { sidebarMenus } = useLayoutMenus(router)
 const userMenuVisible = ref(false)
@@ -184,8 +185,8 @@ const confirmLogout = async (): Promise<void> => {
             type: 'warning',
         })
         authStore.clearTokens()
-        if (useAppStore().getIsDark) {
-            useAppStore().toggleDark()
+        if (appStore.isDark) {
+            appStore.toggleDark()
         }
         await router.replace(LOGIN_URL)
     } catch {

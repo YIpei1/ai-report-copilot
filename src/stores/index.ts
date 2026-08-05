@@ -9,3 +9,4 @@ export default pinia
 export * from './modules/auth'
 export * from './modules/app'
 export * from './modules/user'
+export * from './modules/tabsNav'

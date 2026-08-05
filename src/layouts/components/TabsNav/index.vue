@@ -1,85 +1,48 @@
 <template>
     <div class="tabs-page">
+        <!-- 页签功能待重新实现。 -->
         <div class="tabs-scroll-shell">
-            <button
-                class="tabs-scroll-button"
-                :disabled="!canScrollLeft"
-                type="button"
-                aria-label="向左滚动标签"
-                @click="scrollTabs('left')"
-            >
+            <button class="tabs-scroll-button" disabled type="button" aria-label="向左滚动标签">
                 <el-icon>
                     <ArrowLeft />
                 </el-icon>
             </button>
 
-            <nav
-                ref="tabsNavRef"
-                class="tabs-nav"
-                aria-label="页面标签"
-                @click="hideContextMenu"
-                @scroll="updateScrollState"
-            >
+            <nav class="tabs-nav" aria-label="页面标签">
                 <button
-                    v-for="tab in visitedTabs"
-                    :key="tab.path"
-                    :class="{ 'tabs-nav__item--active': tab.path === activeTabPath }"
+                    v-for="item in visitedTabs"
+                    :key="item.path"
                     class="tabs-nav__item"
+                    :class="{ 'tabs-nav__item--active': item.path === activePath }"
                     type="button"
-                    :data-tab-path="tab.path"
-                    @click="goTab(tab.path)"
-                    @contextmenu.prevent="showContextMenu($event, tab)"
+                    @click="activeTabsNavItem(item.path)"
                 >
-                    <span class="tabs-nav__title">{{ tab.title }}</span>
+                    <span class="tabs-nav__title">{{ item.title }}</span>
                     <el-icon
-                        v-if="tab.path !== dashboardPath"
+                        v-if="item.path !== dashboardPath"
                         class="tabs-nav__close"
-                        @click.stop="closeTab(tab.path)"
+                        @click.stop="closeTabsNavItem(item.path)"
                     >
                         <Close />
                     </el-icon>
                 </button>
-
-                <Teleport to="body">
-                    <div
-                        v-if="contextMenu.visible"
-                        class="tabs-nav-context-menu"
-                        :style="contextMenuStyle"
-                        @click.stop
-                    >
-                        <button type="button" @click="refreshContextTab">刷新当前</button>
-                        <button
-                            type="button"
-                            :disabled="contextMenu.targetPath === dashboardPath"
-                            @click="closeContextTab"
-                        >
-                            关闭当前
-                        </button>
-                        <button type="button" @click="closeOtherTabs">关闭其他</button>
-                        <button type="button" @click="closeLeftTabs">关闭左侧</button>
-                        <button type="button" @click="closeRightTabs">关闭右侧</button>
-                        <button type="button" @click="closeAllTabs">关闭全部</button>
-                    </div>
-                </Teleport>
             </nav>
 
-            <button
-                class="tabs-scroll-button"
-                :disabled="!canScrollRight"
-                type="button"
-                aria-label="向右滚动标签"
-                @click="scrollTabs('right')"
-            >
+            <button class="tabs-scroll-button" disabled type="button" aria-label="向右滚动标签">
                 <el-icon>
                     <ArrowRight />
                 </el-icon>
             </button>
         </div>
+
+        <!-- 明暗主题切换。 -->
         <div class="tabs-right">
             <button
                 class="theme-toggle"
-                :class="{ 'is-dark': appStore.getIsDark }"
-                aria-label="Toggle theme"
+                :class="{ 'is-dark': isDark }"
+                type="button"
+                :aria-label="isDark ? '切换为浅色模式' : '切换为暗色模式'"
+                :aria-pressed="isDark"
                 @click="toggleTheme"
             >
                 <span class="theme-toggle__icon theme-toggle__icon--sun">
@@ -94,7 +57,7 @@
                 </span>
                 <span class="theme-toggle__thumb">
                     <el-icon class="theme-toggle__thumb-icon">
-                        <component :is="appStore.getIsDark ? Moon : Sunny" />
+                        <component :is="isDark ? Moon : Sunny" />
                     </el-icon>
                 </span>
             </button>
@@ -103,251 +66,52 @@
 </template>
 
 <script setup lang="ts" name="TabsNav">
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router'
-import { APP_NAME, HOME_URL } from '@/constants'
-import { useAppStore } from '@/stores/modules/app'
 import { ArrowLeft, ArrowRight, Close, Moon, Sunny } from '@element-plus/icons-vue'
-interface VisitedTab {
-    path: string
-    title: string
-}
-
-defineProps<{
-    collapsed: boolean
-}>()
-
-const emit = defineEmits<{
-    refreshTab: [path: string]
-    toggleCollapse: []
-}>()
-const appStore = useAppStore()
+import { useAppStore } from '@/stores/modules/app'
+import { useTabsNavStore } from '@/stores/modules/tabsNav'
+import { useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 const route = useRoute()
 const router = useRouter()
-const dashboardPath = '/dashboard'
-const tabsNavRef = ref<HTMLElement>()
-const canScrollLeft = ref(false)
-const canScrollRight = ref(false)
-const visitedTabs = ref<VisitedTab[]>([
-    {
-        path: dashboardPath,
-        title: '工作台',
-    },
-])
-const contextMenu = reactive({
-    left: 0,
-    targetPath: '',
-    top: 0,
-    visible: false,
-})
+const appStore = useAppStore()
+const tabsNavStore = useTabsNavStore()
+const { isDark } = storeToRefs(appStore)
+const { visitedTabs, activePath } = storeToRefs(tabsNavStore)
+const dashboardPath = tabsNavStore.dashboardPath
 
-const activeTabPath = computed(() => {
-    return route.path === HOME_URL ? dashboardPath : route.path
-})
-
-const getRouteTitle = (targetRoute: RouteLocationNormalizedLoaded): string => {
-    const title = targetRoute.meta.title
-    return typeof title === 'string' && title ? title : APP_NAME
+const activeTabsNavItem = async (path: string) => {
+    if (route.path === path) {
+        return
+    }
+    await router.push(path)
 }
 
-const contextMenuStyle = computed(() => ({
-    left: `${contextMenu.left}px`,
-    top: `${contextMenu.top}px`,
-}))
-
-const updateScrollState = (): void => {
-    const tabsNav = tabsNavRef.value
-
-    if (!tabsNav) return
-
-    const maxScrollLeft = tabsNav.scrollWidth - tabsNav.clientWidth
-
-    canScrollLeft.value = tabsNav.scrollLeft > 1
-    canScrollRight.value = tabsNav.scrollLeft < maxScrollLeft - 1
-}
-
-const scrollTabs = (direction: 'left' | 'right'): void => {
-    const tabsNav = tabsNavRef.value
-
-    if (!tabsNav) return
-
-    tabsNav.scrollBy({
-        behavior: 'smooth',
-        left: direction === 'left' ? -tabsNav.clientWidth * 0.8 : tabsNav.clientWidth * 0.8,
-    })
-}
-
-const scrollActiveTabIntoView = async (): Promise<void> => {
-    await nextTick()
-
-    const tabsNav = tabsNavRef.value
-    const activeTab = tabsNav?.querySelector<HTMLElement>(
-        `[data-tab-path="${CSS.escape(activeTabPath.value)}"]`,
-    )
-
-    activeTab?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'nearest',
-    })
-
-    requestAnimationFrame(updateScrollState)
-}
-
-/**
- * 切换主题
- */
-const toggleTheme = () => {
+// 切换明暗主题，主题状态和本地缓存由 useDark 统一维护。
+const toggleTheme = (): void => {
     appStore.toggleDark()
 }
 
-const addVisitedTab = (targetRoute: RouteLocationNormalizedLoaded): void => {
-    if (targetRoute.meta.isTabsNav) {
+const closeTabsNavItem = async (path: string): Promise<void> => {
+    if (path === dashboardPath) {
         return
     }
 
-    const nextPath = targetRoute.path === HOME_URL ? dashboardPath : targetRoute.path
+    const tabIndex = visitedTabs.value.findIndex((item) => item.path === path)
 
-    if (visitedTabs.value.some((tab) => tab.path === nextPath)) {
+    if (tabIndex === -1) {
         return
     }
 
-    visitedTabs.value.push({
-        path: nextPath,
-        title: getRouteTitle(targetRoute),
-    })
-}
+    const isActiveTab = path === activePath.value
 
-const goTab = async (path: string): Promise<void> => {
-    if (path !== activeTabPath.value) {
-        await router.push(path)
+    const nextTab = visitedTabs.value[tabIndex + 1] || visitedTabs.value[tabIndex - 1]
+
+    tabsNavStore.removeVisitedTab(path)
+
+    if (isActiveTab && nextTab) {
+        await router.push(nextTab.path)
     }
 }
-
-const closeTab = async (path: string): Promise<void> => {
-    const tabIndex = visitedTabs.value.findIndex((tab) => tab.path === path)
-
-    if (tabIndex === -1 || path === dashboardPath) {
-        return
-    }
-
-    visitedTabs.value.splice(tabIndex, 1)
-
-    if (path === activeTabPath.value) {
-        const nextTab = visitedTabs.value[tabIndex] || visitedTabs.value.at(-1)
-        await router.push(nextTab?.path || HOME_URL)
-    }
-}
-
-const normalizeTabs = (tabs: VisitedTab[]): VisitedTab[] => {
-    const dashboardTab = visitedTabs.value.find((tab) => tab.path === dashboardPath) || {
-        path: dashboardPath,
-        title: '工作台',
-    }
-    const nextTabs = tabs.filter((tab) => tab.path !== dashboardPath)
-
-    return [dashboardTab, ...nextTabs]
-}
-
-const ensureActiveTabVisible = async (): Promise<void> => {
-    if (!visitedTabs.value.some((tab) => tab.path === activeTabPath.value)) {
-        await router.push(dashboardPath)
-    }
-}
-
-const hideContextMenu = (): void => {
-    contextMenu.visible = false
-}
-
-const showContextMenu = (event: MouseEvent, tab: VisitedTab): void => {
-    contextMenu.targetPath = tab.path
-    contextMenu.left = event.clientX
-    contextMenu.top = event.clientY
-    contextMenu.visible = true
-}
-
-const closeContextTab = async (): Promise<void> => {
-    const targetPath = contextMenu.targetPath
-    hideContextMenu()
-    await closeTab(targetPath)
-}
-
-const refreshContextTab = (): void => {
-    const targetPath = contextMenu.targetPath
-    hideContextMenu()
-    emit('refreshTab', targetPath)
-}
-
-const closeOtherTabs = async (): Promise<void> => {
-    const targetPath = contextMenu.targetPath
-    visitedTabs.value = normalizeTabs(visitedTabs.value.filter((tab) => tab.path === targetPath))
-    hideContextMenu()
-
-    if (activeTabPath.value !== targetPath) {
-        await router.push(targetPath)
-    }
-}
-
-const closeLeftTabs = async (): Promise<void> => {
-    const targetIndex = visitedTabs.value.findIndex((tab) => tab.path === contextMenu.targetPath)
-
-    if (targetIndex > -1) {
-        visitedTabs.value = normalizeTabs(visitedTabs.value.slice(targetIndex))
-    }
-
-    hideContextMenu()
-    await ensureActiveTabVisible()
-}
-
-const closeRightTabs = async (): Promise<void> => {
-    const targetIndex = visitedTabs.value.findIndex((tab) => tab.path === contextMenu.targetPath)
-
-    if (targetIndex > -1) {
-        visitedTabs.value = normalizeTabs(visitedTabs.value.slice(0, targetIndex + 1))
-    }
-
-    hideContextMenu()
-    await ensureActiveTabVisible()
-}
-
-const closeAllTabs = async (): Promise<void> => {
-    visitedTabs.value = normalizeTabs([])
-    hideContextMenu()
-
-    if (activeTabPath.value !== dashboardPath) {
-        await router.push(dashboardPath)
-    }
-}
-
-watch(
-    () => route.fullPath,
-    () => {
-        addVisitedTab(route)
-        void scrollActiveTabIntoView()
-    },
-    { immediate: true },
-)
-
-watch(
-    () => visitedTabs.value.length,
-    () => {
-        void scrollActiveTabIntoView()
-    },
-)
-
-window.addEventListener('click', hideContextMenu)
-window.addEventListener('scroll', hideContextMenu, true)
-window.addEventListener('resize', updateScrollState)
-
-onMounted(() => {
-    void scrollActiveTabIntoView()
-})
-
-onBeforeUnmount(() => {
-    window.removeEventListener('click', hideContextMenu)
-    window.removeEventListener('scroll', hideContextMenu, true)
-    window.removeEventListener('resize', updateScrollState)
-})
 </script>
 
 <style scoped lang="scss">
@@ -464,14 +228,16 @@ onBeforeUnmount(() => {
     flex: 0 0 $font-size-md;
     width: $font-size-md;
     height: $font-size-md;
-    font-size: $font-size-sm;
-    color: var(--text-secondary);
+    font-size: $font-size-xs;
+    color: var(--tabs-close-text);
     cursor: pointer;
     border-radius: 50%;
+    opacity: 0.8;
     place-items: center;
     transition:
         color $transition-fast ease,
-        background-color $transition-fast ease;
+        background-color $transition-fast ease,
+        opacity $transition-fast ease;
 }
 
 .tabs-nav__item--active .tabs-nav__close {
@@ -480,7 +246,8 @@ onBeforeUnmount(() => {
 
 .tabs-nav__close:hover {
     color: var(--header-text);
-    background: var(--header-border);
+    background: var(--surface-hover-bg);
+    opacity: 1;
 }
 
 .tabs-nav-context-menu {

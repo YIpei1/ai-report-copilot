@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { useDark } from '@vueuse/core'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { getBrowserFingerprint } from '@/utils/fingerprint'
 export const useAppStore = defineStore(
     'app',
@@ -10,9 +10,6 @@ export const useAppStore = defineStore(
         })
         const fingerprint = ref('')
 
-        const getFingerprint = computed(() => fingerprint.value)
-
-        const getIsDark = computed(() => isDark.value)
         const toggleDark = () => {
             isDark.value = !isDark.value
         }
@@ -21,9 +18,8 @@ export const useAppStore = defineStore(
         }
         return {
             isDark,
+            fingerprint,
             toggleDark,
-            getIsDark,
-            getFingerprint,
             setFingerprint,
         }
     },

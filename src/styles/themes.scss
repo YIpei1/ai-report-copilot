@@ -75,6 +75,35 @@
     // 在线状态标识
     --status-success: #67c23a;
 
+    // 通用状态色及浅色背景
+    --status-success-soft: #eefbe9;
+    --status-success-border: #dff1ce;
+    --status-success-shadow: rgb(103 194 58 / 30%);
+    --status-danger: #f03f45;
+    --status-danger-strong: #ff4d5b;
+    --status-danger-soft: #fff0ef;
+    --status-danger-border: #ffb8b8;
+    --status-danger-shadow: rgb(255 77 91 / 30%);
+    --status-warning: #e6a23c;
+    --status-warning-strong: #f7a800;
+    --status-warning-soft: #fffbeb;
+    --status-warning-border: #ffd66b;
+    --status-info: #1677ff;
+    --status-info-soft: #f4faff;
+    --status-info-border: #cde6ff;
+
+    // Report Editor（报表编辑器）
+    --report-workspace-bg: #525659;
+    --report-paper-bg: #fff;
+    --report-paper-text: #000;
+    --report-paper-muted: #767676;
+    --report-paper-border: #111;
+    --report-paper-guide: #c9c9c9;
+    --report-paper-guide-light: #d2d2d2;
+    --report-paper-control-border: #aaa;
+    --report-paper-control-text: #333;
+    --report-paper-shadow: rgb(0 0 0 / 18%);
+
     // Effect（公共效果）
     // 布局浮层和侧边栏投影
     --layout-shadow: rgb(34 58 91 / 18%);
@@ -121,6 +150,33 @@
     --text-disabled: #6b7280;
     --icon-muted: #8b94a7;
     --status-success: #67c23a;
+    --status-success-soft: rgb(103 194 58 / 14%);
+    --status-success-border: rgb(103 194 58 / 38%);
+    --status-success-shadow: rgb(103 194 58 / 32%);
+    --status-danger: #f56c6c;
+    --status-danger-strong: #ff6b75;
+    --status-danger-soft: rgb(245 108 108 / 14%);
+    --status-danger-border: rgb(245 108 108 / 38%);
+    --status-danger-shadow: rgb(245 108 108 / 32%);
+    --status-warning: #e6a23c;
+    --status-warning-strong: #f3b447;
+    --status-warning-soft: rgb(230 162 60 / 14%);
+    --status-warning-border: rgb(230 162 60 / 38%);
+    --status-info: #4f8ee8;
+    --status-info-soft: rgb(79 142 232 / 14%);
+    --status-info-border: rgb(79 142 232 / 38%);
+
+    // 报表纸张保持打印颜色，外围工作区和业务面板跟随深色主题。
+    --report-workspace-bg: #303336;
+    --report-paper-bg: #fff;
+    --report-paper-text: #000;
+    --report-paper-muted: #767676;
+    --report-paper-border: #111;
+    --report-paper-guide: #c9c9c9;
+    --report-paper-guide-light: #d2d2d2;
+    --report-paper-control-border: #aaa;
+    --report-paper-control-text: #333;
+    --report-paper-shadow: rgb(0 0 0 / 38%);
 
     // Effect（公共效果深色主题）
     --layout-shadow: rgb(0 0 0 / 35%);

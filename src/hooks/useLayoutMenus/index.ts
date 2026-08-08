@@ -65,6 +65,10 @@ const createMenuItem = (
     hasAnyPermission: (codes: string[]) => boolean,
     parentPath = '',
 ): LayoutMenuItem | null => {
+    if (!isVisibleMenuRoute(routeRecord)) {
+        return null
+    }
+
     const currentPath = getFullRoutePath(parentPath, routeRecord.path)
     const hasChildren = (routeRecord.children || []).length > 0
     const children = (routeRecord.children || [])

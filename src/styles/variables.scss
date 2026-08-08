@@ -47,6 +47,25 @@ $theme-toggle-height: 24px;
 // Theme Toggle 滑块尺寸
 $theme-toggle-thumb-size: 18px;
 
+// Report Editor（报表编辑器）左侧目录宽度
+$report-left-menu-width: 220px;
+
+// Report Editor 右侧提示面板宽度
+$report-right-panel-width: 320px;
+
+// Report Editor 面板头部高度
+$report-panel-header-height: 48px;
+
+// A4 报表纸张屏幕预览尺寸
+$report-paper-width: 794px;
+$report-paper-height: 1123px;
+
+// A4 报表正文区域宽度
+$report-paper-content-width: 686px;
+
+// 报表纸张在预览工作区中的外边距
+$report-paper-workspace-padding: 18px 28px;
+
 // 平板端布局断点
 $breakpoint-tablet: 960px;
 

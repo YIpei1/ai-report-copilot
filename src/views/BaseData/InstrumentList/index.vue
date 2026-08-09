@@ -9,17 +9,18 @@
             <el-button type="primary" @click="openCreateDialog">新增仪器</el-button>
         </header>
 
-        <el-card class="base-data-card" shadow="never">
-            <div class="base-data-toolbar">
-                <el-input
-                    v-model="keyword"
-                    clearable
-                    placeholder="搜索仪器名称、编号或型号"
-                    prefix-icon="Search"
-                />
-            </div>
+        <el-card class="base-data-filter-card" shadow="never">
+            <SearchFilterCard
+                v-model:model="filters"
+                :fields="searchFields"
+                :loading="loading"
+                @reset="handleReset"
+                @search="handleSearch"
+            />
+        </el-card>
 
-            <el-table v-loading="loading" :data="filteredInstruments" row-key="id">
+        <el-card class="base-data-card" shadow="never">
+            <el-table v-loading="loading" :data="instruments" row-key="id">
                 <el-table-column label="仪器编号" width="120" prop="code" />
                 <el-table-column label="仪器名称" min-width="160" prop="name" />
                 <el-table-column label="型号" min-width="150" prop="model" />
@@ -40,6 +41,16 @@
                     </template>
                 </el-table-column>
             </el-table>
+
+            <div class="base-data-pagination">
+                <MyPagination
+                    v-model:current-page="pagination.page"
+                    v-model:page-size="pagination.pageSize"
+                    :total="total"
+                    @current-change="handleCurrentPageChange"
+                    @size-change="handlePageSizeChange"
+                />
+            </div>
         </el-card>
 
         <el-dialog
@@ -107,7 +118,7 @@
 </template>
 
 <script setup lang="ts" name="InstrumentList">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import {
     createInstrument,
     deleteInstrument,
@@ -117,6 +128,48 @@ import {
     type InstrumentFormParams,
     type InstrumentStatus,
 } from '@/api/baseData'
+import type { SearchFilterField } from '@/components/SearchFilterCard/types'
+
+type InstrumentFilters = {
+    keyword: string
+    verificationExpiresAtRange: string[]
+    status: InstrumentStatus | ''
+}
+
+const createEmptyFilters = (): InstrumentFilters => ({
+    keyword: '',
+    verificationExpiresAtRange: [],
+    status: '',
+})
+
+// 仪器搜索项统一配置关键词、检定有效期和使用状态。
+const searchFields: SearchFilterField[] = [
+    {
+        prop: 'keyword',
+        label: '关键词',
+        type: 'input',
+        placeholder: '仪器名称、编号或型号',
+    },
+    {
+        prop: 'verificationExpiresAtRange',
+        label: '有效期',
+        type: 'date-range',
+        startPlaceholder: '开始日期',
+        endPlaceholder: '结束日期',
+        valueFormat: 'YYYY-MM-DD',
+    },
+    {
+        prop: 'status',
+        label: '使用状态',
+        type: 'select',
+        placeholder: '全部状态',
+        options: [
+            { label: '可用', value: 'available' },
+            { label: '已过期', value: 'expired' },
+            { label: '停用', value: 'disabled' },
+        ],
+    },
+]
 
 const createEmptyForm = (): InstrumentFormParams => ({
     code: '',
@@ -132,21 +185,14 @@ const loading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
 const editingId = ref('')
-const keyword = ref('')
+const filters = ref<InstrumentFilters>(createEmptyFilters())
 const instruments = ref<Instrument[]>([])
-const instrumentForm = reactive<InstrumentFormParams>(createEmptyForm())
-
-// 搜索只影响当前展示，不修改后端原始数据。
-const filteredInstruments = computed(() => {
-    const searchValue = keyword.value.trim().toLowerCase()
-    if (!searchValue) return instruments.value
-
-    return instruments.value.filter((instrument) => {
-        return [instrument.code, instrument.name, instrument.model].some((value) =>
-            value.toLowerCase().includes(searchValue),
-        )
-    })
+const total = ref(0)
+const pagination = reactive({
+    page: 1,
+    pageSize: 10,
 })
+const instrumentForm = reactive<InstrumentFormParams>(createEmptyForm())
 
 const getStatusText = (status: InstrumentStatus): string => {
     return { available: '可用', expired: '已过期', disabled: '停用' }[status]
@@ -160,11 +206,41 @@ const getStatusTagType = (status: InstrumentStatus): 'success' | 'warning' | 'in
 const loadInstruments = async (): Promise<void> => {
     loading.value = true
     try {
-        const response = await getInstrumentList()
-        instruments.value = response.data
+        const [verificationExpiresAtStart, verificationExpiresAtEnd] =
+            filters.value.verificationExpiresAtRange
+        const response = await getInstrumentList({
+            keyword: filters.value.keyword,
+            verificationExpiresAtStart,
+            verificationExpiresAtEnd,
+            status: filters.value.status,
+            page: pagination.page,
+            pageSize: pagination.pageSize,
+        })
+        instruments.value = response.data.items
+        total.value = response.data.total
     } finally {
         loading.value = false
     }
+}
+
+const handleSearch = (): void => {
+    pagination.page = 1
+    void loadInstruments()
+}
+
+const handleReset = (): void => {
+    filters.value = createEmptyFilters()
+    pagination.page = 1
+    void loadInstruments()
+}
+
+const handleCurrentPageChange = (): void => {
+    void loadInstruments()
+}
+
+const handlePageSizeChange = (): void => {
+    pagination.page = 1
+    void loadInstruments()
 }
 
 const openCreateDialog = (): void => {
@@ -229,6 +305,11 @@ const handleDelete = async (tableRow: unknown): Promise<void> => {
         })
         await deleteInstrument(instrument.id)
         ElMessage.success('仪器删除成功')
+
+        if (instruments.value.length === 1 && pagination.page > 1) {
+            pagination.page -= 1
+        }
+
         await loadInstruments()
     } catch {
         // 用户取消删除时保留当前数据。
@@ -271,18 +352,15 @@ onMounted(() => {
     color: var(--text-secondary);
 }
 
+.base-data-filter-card,
 .base-data-card {
     border-color: var(--header-border);
 }
 
-.base-data-toolbar {
+.base-data-pagination {
     display: flex;
     justify-content: flex-end;
-    margin-bottom: $space-md;
-}
-
-.base-data-toolbar :deep(.el-input) {
-    width: 300px;
+    margin-top: $space-lg;
 }
 
 :deep(.el-date-editor),

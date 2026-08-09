@@ -243,7 +243,6 @@ export const mockInspectionTemplates: InspectionTemplate[] = [
         standard: '参考 TSG T7008-2023',
         applicableType: '曳引与强制驱动电梯',
         description: '通过报表组件组合生成检测报告，当前仅保留演示所需内容。',
-        status: 'enabled',
         isDemo: true,
         components: mockReportComponents.map((component, index) => ({
             reportComponentId: component.id,

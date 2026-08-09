@@ -8,6 +8,16 @@
             </div>
         </header>
 
+        <el-card class="report-filter-card" shadow="never">
+            <SearchFilterCard
+                v-model:model="filters"
+                :fields="searchFields"
+                :loading="loading"
+                @reset="handleReset"
+                @search="handleSearch"
+            />
+        </el-card>
+
         <el-card class="report-card" shadow="never">
             <el-table v-loading="loading" :data="reports" row-key="id">
                 <el-table-column label="报告编号" min-width="140" prop="reportCode" />
@@ -32,20 +42,60 @@
                 <el-table-column label="创建人员" width="110" prop="createdBy" />
                 <el-table-column label="创建时间" width="170" prop="createdAt" />
             </el-table>
+
+            <div class="report-pagination">
+                <MyPagination
+                    v-model:current-page="pagination.page"
+                    v-model:page-size="pagination.pageSize"
+                    :total="total"
+                    @current-change="handleCurrentPageChange"
+                    @size-change="handlePageSizeChange"
+                />
+            </div>
         </el-card>
     </section>
 </template>
 
 <script setup lang="ts" name="ReportList">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { getInspectionTemplateList } from '@/api/baseData'
 import {
     getInspectionReportList,
     type InspectionReportSummary,
+    type ReportSource,
     type ReportStatus,
 } from '@/api/report'
+import type { SearchFilterField, SearchFilterOption } from '@/components/SearchFilterCard/types'
+
+type ReportFilters = {
+    keyword: string
+    source: ReportSource | ''
+    status: ReportStatus | ''
+    createdBy: string
+    createdAtStart: string
+    createdAtEnd: string
+    templateName: string
+}
+
+const createEmptyFilters = (): ReportFilters => ({
+    keyword: '',
+    source: '',
+    status: '',
+    createdBy: '',
+    createdAtStart: '',
+    createdAtEnd: '',
+    templateName: '',
+})
 
 const loading = ref(false)
 const reports = ref<InspectionReportSummary[]>([])
+const total = ref(0)
+const filters = ref<ReportFilters>(createEmptyFilters())
+const templateOptions = ref<SearchFilterOption[]>([])
+const pagination = reactive({
+    page: 1,
+    pageSize: 10,
+})
 
 const statusTextMap: Record<ReportStatus, string> = {
     draft: '草稿',
@@ -61,24 +111,115 @@ const statusTypeMap: Record<ReportStatus, 'danger' | 'info' | 'success' | 'warni
     rejected: 'danger',
 }
 
+// 报告管理搜索项统一交由 SearchFilterCard 生成和布局。
+const searchFields = computed<SearchFilterField[]>(() => [
+    {
+        prop: 'keyword',
+        label: '关键词',
+        type: 'input',
+        placeholder: '报告名称、编号或检测设备',
+    },
+    {
+        prop: 'source',
+        label: '创建方式',
+        type: 'select',
+        placeholder: '全部方式',
+        options: [
+            { label: 'AI 创建', value: 'ai' },
+            { label: '手动创建', value: 'manual' },
+        ],
+    },
+    {
+        prop: 'status',
+        label: '报告状态',
+        type: 'select',
+        placeholder: '全部状态',
+        options: [
+            { label: '草稿', value: 'draft' },
+            { label: '待审核', value: 'pending_review' },
+            { label: '已通过', value: 'approved' },
+            { label: '已驳回', value: 'rejected' },
+        ],
+    },
+    {
+        prop: 'createdBy',
+        label: '创建人员',
+        type: 'input',
+        placeholder: '请输入创建人员',
+    },
+    {
+        prop: 'createdAtRange',
+        label: '创建时间',
+        type: 'datetime-range',
+        startProp: 'createdAtStart',
+        endProp: 'createdAtEnd',
+        startPlaceholder: '开始时间',
+        endPlaceholder: '结束时间',
+        valueFormat: 'YYYY-MM-DD HH:mm:ss',
+        col: { xs: 24, sm: 24, md: 16, lg: 12, xl: 12 },
+    },
+    {
+        prop: 'templateName',
+        label: '检测模板',
+        type: 'select',
+        placeholder: '全部模板',
+        options: templateOptions.value,
+    },
+])
+
 const getStatusText = (status: ReportStatus): string => statusTextMap[status]
 
 const getStatusType = (status: ReportStatus): 'danger' | 'info' | 'success' | 'warning' => {
     return statusTypeMap[status]
 }
 
+// 加载检测模板作为报告筛选项。
+const loadTemplateOptions = async (): Promise<void> => {
+    const response = await getInspectionTemplateList()
+    templateOptions.value = response.data.map((template) => ({
+        label: template.name,
+        value: template.name,
+    }))
+}
+
 const loadReports = async (): Promise<void> => {
     loading.value = true
     try {
-        const response = await getInspectionReportList()
-        reports.value = response.data
+        const response = await getInspectionReportList({
+            ...filters.value,
+            page: pagination.page,
+            pageSize: pagination.pageSize,
+        })
+        reports.value = response.data.items
+        total.value = response.data.total
     } finally {
         loading.value = false
     }
 }
 
+const handleSearch = (): void => {
+    pagination.page = 1
+    void loadReports()
+}
+
+const handleReset = (): void => {
+    filters.value = createEmptyFilters()
+    pagination.page = 1
+    void loadReports()
+}
+
+const handleCurrentPageChange = (): void => {
+    void loadReports()
+}
+
+const handlePageSizeChange = (): void => {
+    pagination.page = 1
+    void loadReports()
+}
+
 onMounted(() => {
     void loadReports()
+    void loadTemplateOptions()
 })
 </script>
 
@@ -107,7 +248,14 @@ onMounted(() => {
     color: var(--text-secondary);
 }
 
+.report-filter-card,
 .report-card {
     border-color: var(--header-border);
+}
+
+.report-pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: $space-lg;
 }
 </style>

@@ -9,12 +9,22 @@
             <el-button type="primary" @click="openCreateDialog">新增工具箱</el-button>
         </header>
 
+        <el-card class="base-data-filter-card" shadow="never">
+            <SearchFilterCard
+                v-model:model="filters"
+                :fields="searchFields"
+                :loading="loading"
+                @reset="handleReset"
+                @search="handleSearch"
+            />
+        </el-card>
+
         <el-card class="base-data-card" shadow="never">
             <el-table v-loading="loading" :data="toolboxes" row-key="id">
                 <el-table-column label="工具箱名称" min-width="190" prop="name" />
                 <el-table-column label="工具箱编号" width="130" prop="code" />
-                <el-table-column label="适用检测类型" min-width="210" prop="applicableType" />
-                <el-table-column label="仪器设备" min-width="300">
+                <el-table-column label="适用检测类型" min-width="190" prop="applicableType" />
+                <el-table-column label="仪器设备" min-width="260">
                     <template #default="{ row }">
                         <el-tag
                             v-for="instrumentName in getInstrumentNames(row.instrumentIds)"
@@ -26,6 +36,7 @@
                         </el-tag>
                     </template>
                 </el-table-column>
+                <el-table-column label="备注" min-width="180" prop="remark" show-overflow-tooltip />
                 <el-table-column label="状态" width="90">
                     <template #default="{ row }">
                         <el-tag :type="row.status === 'enabled' ? 'success' : 'info'">
@@ -40,6 +51,16 @@
                     </template>
                 </el-table-column>
             </el-table>
+
+            <div class="base-data-pagination">
+                <MyPagination
+                    v-model:current-page="pagination.page"
+                    v-model:page-size="pagination.pageSize"
+                    :total="total"
+                    @current-change="handleCurrentPageChange"
+                    @size-change="handlePageSizeChange"
+                />
+            </div>
         </el-card>
 
         <el-dialog
@@ -101,13 +122,53 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import {
     createToolbox,
     deleteToolbox,
-    getInstrumentList,
+    getInstrumentOptions,
     getToolboxList,
     updateToolbox,
+    type DataStatus,
     type Instrument,
     type Toolbox,
     type ToolboxFormParams,
 } from '@/api/baseData'
+import type { SearchFilterField } from '@/components/SearchFilterCard/types'
+
+type ToolboxFilters = {
+    keyword: string
+    status: DataStatus | ''
+    remark: string
+}
+
+const createEmptyFilters = (): ToolboxFilters => ({
+    keyword: '',
+    status: '',
+    remark: '',
+})
+
+// 工具箱搜索项统一配置名称或编号、状态和备注。
+const searchFields: SearchFilterField[] = [
+    {
+        prop: 'keyword',
+        label: '关键词',
+        type: 'input',
+        placeholder: '工具箱名称或编号',
+    },
+    {
+        prop: 'status',
+        label: '状态',
+        type: 'select',
+        placeholder: '全部状态',
+        options: [
+            { label: '启用', value: 'enabled' },
+            { label: '停用', value: 'disabled' },
+        ],
+    },
+    {
+        prop: 'remark',
+        label: '备注',
+        type: 'input',
+        placeholder: '请输入备注内容',
+    },
+]
 
 const createEmptyForm = (): ToolboxFormParams => ({
     code: '',
@@ -122,8 +183,14 @@ const loading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
 const editingId = ref('')
+const filters = ref<ToolboxFilters>(createEmptyFilters())
 const instruments = ref<Instrument[]>([])
 const toolboxes = ref<Toolbox[]>([])
+const total = ref(0)
+const pagination = reactive({
+    page: 1,
+    pageSize: 10,
+})
 const toolboxForm = reactive<ToolboxFormParams>(createEmptyForm())
 
 const availableInstruments = computed(() => {
@@ -134,18 +201,46 @@ const getInstrumentNames = (instrumentIds: string[]): string[] => {
     return instrumentIds.map((id) => instruments.value.find((item) => item.id === id)?.name || id)
 }
 
-const loadBaseData = async (): Promise<void> => {
+const loadToolboxes = async (): Promise<void> => {
     loading.value = true
     try {
-        const [instrumentResponse, toolboxResponse] = await Promise.all([
-            getInstrumentList(),
-            getToolboxList(),
-        ])
-        instruments.value = instrumentResponse.data
-        toolboxes.value = toolboxResponse.data
+        const response = await getToolboxList({
+            keyword: filters.value.keyword,
+            status: filters.value.status,
+            remark: filters.value.remark,
+            page: pagination.page,
+            pageSize: pagination.pageSize,
+        })
+        toolboxes.value = response.data.items
+        total.value = response.data.total
     } finally {
         loading.value = false
     }
+}
+
+const loadBaseData = async (): Promise<void> => {
+    const [instrumentResponse] = await Promise.all([getInstrumentOptions(), loadToolboxes()])
+    instruments.value = instrumentResponse.data
+}
+
+const handleSearch = (): void => {
+    pagination.page = 1
+    void loadToolboxes()
+}
+
+const handleReset = (): void => {
+    filters.value = createEmptyFilters()
+    pagination.page = 1
+    void loadToolboxes()
+}
+
+const handleCurrentPageChange = (): void => {
+    void loadToolboxes()
+}
+
+const handlePageSizeChange = (): void => {
+    pagination.page = 1
+    void loadToolboxes()
 }
 
 const openCreateDialog = (): void => {
@@ -190,7 +285,7 @@ const submitToolbox = async (): Promise<void> => {
             ElMessage.success('工具箱新增成功')
         }
         dialogVisible.value = false
-        await loadBaseData()
+        await loadToolboxes()
     } finally {
         submitting.value = false
     }
@@ -206,7 +301,12 @@ const handleDelete = async (tableRow: unknown): Promise<void> => {
         })
         await deleteToolbox(toolbox.id)
         ElMessage.success('工具箱删除成功')
-        await loadBaseData()
+
+        if (toolboxes.value.length === 1 && pagination.page > 1) {
+            pagination.page -= 1
+        }
+
+        await loadToolboxes()
     } catch {
         // 用户取消删除时保留当前数据。
     }
@@ -248,12 +348,19 @@ onMounted(() => {
     color: var(--text-secondary);
 }
 
+.base-data-filter-card,
 .base-data-card {
     border-color: var(--header-border);
 }
 
 .instrument-tag {
     margin: $space-xs $space-xs $space-xs 0;
+}
+
+.base-data-pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: $space-lg;
 }
 
 :deep(.el-select) {

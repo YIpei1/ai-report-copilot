@@ -9,28 +9,17 @@
             <el-button type="primary" @click="openCreateDialog">新增设备</el-button>
         </header>
 
-        <el-card class="base-data-card" shadow="never">
-            <el-form class="device-filters" :inline="true" :model="filters">
-                <el-form-item label="关键词">
-                    <el-input
-                        v-model="filters.keyword"
-                        clearable
-                        placeholder="设备名称、编号或安装地点"
-                        @keyup.enter="handleSearch"
-                    />
-                </el-form-item>
-                <el-form-item label="设备状态">
-                    <el-select v-model="filters.status" clearable placeholder="全部状态">
-                        <el-option label="启用" value="active" />
-                        <el-option label="停用" value="disabled" />
-                    </el-select>
-                </el-form-item>
-                <el-form-item>
-                    <el-button type="primary" @click="handleSearch">查询</el-button>
-                    <el-button @click="handleReset">重置</el-button>
-                </el-form-item>
-            </el-form>
+        <el-card class="base-data-filter-card" shadow="never">
+            <SearchFilterCard
+                v-model:model="filters"
+                :fields="searchFields"
+                :loading="loading"
+                @reset="handleReset"
+                @search="handleSearch"
+            />
+        </el-card>
 
+        <el-card class="base-data-card" shadow="never">
             <el-table v-loading="loading" :data="devices" row-key="id">
                 <el-table-column label="设备名称" min-width="190" prop="name" />
                 <el-table-column label="设备编号" min-width="130" prop="code" />
@@ -58,13 +47,12 @@
             </el-table>
 
             <div class="base-data-pagination">
-                <el-pagination
+                <MyPagination
                     v-model:current-page="pagination.page"
                     v-model:page-size="pagination.pageSize"
-                    background
-                    layout="total, prev, pager, next"
                     :total="total"
-                    @current-change="loadDevices"
+                    @current-change="handleCurrentPageChange"
+                    @size-change="handlePageSizeChange"
                 />
             </div>
         </el-card>
@@ -179,6 +167,37 @@ import {
     type DeviceFormParams,
     type DeviceStatus,
 } from '@/api/baseData'
+import type { SearchFilterField } from '@/components/SearchFilterCard/types'
+
+type DeviceFilters = {
+    keyword: string
+    status: DeviceStatus | ''
+}
+
+const createEmptyFilters = (): DeviceFilters => ({
+    keyword: '',
+    status: '',
+})
+
+// 设备台账搜索项统一交由 SearchFilterCard 生成和布局。
+const searchFields: SearchFilterField[] = [
+    {
+        prop: 'keyword',
+        label: '关键词',
+        type: 'input',
+        placeholder: '设备名称、编号或安装地点',
+    },
+    {
+        prop: 'status',
+        label: '设备状态',
+        type: 'select',
+        placeholder: '全部状态',
+        options: [
+            { label: '启用', value: 'active' },
+            { label: '停用', value: 'disabled' },
+        ],
+    },
+]
 
 const createEmptyDeviceForm = (): DeviceFormParams => ({
     name: '',
@@ -203,10 +222,7 @@ const devices = ref<Device[]>([])
 const total = ref(0)
 const dialogVisible = ref(false)
 const editingId = ref('')
-const filters = reactive<{ keyword: string; status: DeviceStatus | '' }>({
-    keyword: '',
-    status: '',
-})
+const filters = ref<DeviceFilters>(createEmptyFilters())
 const pagination = reactive({
     page: 1,
     pageSize: 10,
@@ -218,8 +234,8 @@ const loadDevices = async (): Promise<void> => {
 
     try {
         const response = await getDeviceList({
-            keyword: filters.keyword,
-            status: filters.status,
+            keyword: filters.value.keyword,
+            status: filters.value.status,
             page: pagination.page,
             pageSize: pagination.pageSize,
         })
@@ -236,8 +252,18 @@ const handleSearch = (): void => {
 }
 
 const handleReset = (): void => {
-    filters.keyword = ''
-    filters.status = ''
+    filters.value = createEmptyFilters()
+    pagination.page = 1
+    void loadDevices()
+}
+
+// 页码变化后查询对应页的数据。
+const handleCurrentPageChange = (): void => {
+    void loadDevices()
+}
+
+// 每页数量变化后回到第一页，避免当前页超出新的总页数。
+const handlePageSizeChange = (): void => {
     pagination.page = 1
     void loadDevices()
 }
@@ -375,16 +401,9 @@ onMounted(() => {
     color: var(--text-secondary);
 }
 
+.base-data-filter-card,
 .base-data-card {
     border-color: var(--header-border);
-}
-
-.device-filters :deep(.el-input) {
-    width: 260px;
-}
-
-.device-filters :deep(.el-select) {
-    width: 150px;
 }
 
 .base-data-pagination {

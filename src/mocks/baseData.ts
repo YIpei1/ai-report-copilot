@@ -1,6 +1,5 @@
 import { delay, http, HttpResponse } from 'msw'
 import type {
-    DataStatus,
     Device,
     DeviceFormParams,
     DeviceListData,
@@ -9,9 +8,11 @@ import type {
     InspectionTemplateSummary,
     Instrument,
     InstrumentFormParams,
+    InstrumentListData,
     TemplateComponentConfig,
     Toolbox,
     ToolboxFormParams,
+    ToolboxListData,
 } from '@/api/baseData'
 import type { ApiResponse } from '@/http/requestType'
 import {
@@ -50,7 +51,6 @@ const getTemplateSummary = (template: InspectionTemplate): InspectionTemplateSum
     version: template.version,
     standard: template.standard,
     applicableType: template.applicableType,
-    status: template.status,
     componentCount: template.components.length,
     updatedAt: template.updatedAt,
 })
@@ -116,9 +116,44 @@ export const baseDataHandlers = [
         return HttpResponse.json(createSuccessResponse('删除设备成功', null))
     }),
 
-    http.get('/api/base-data/instruments', async () => {
+    http.get('/api/base-data/instruments', async ({ request }) => {
         await delay(200)
-        return HttpResponse.json(createSuccessResponse('获取仪器设备成功', mockInstruments))
+
+        const url = new URL(request.url)
+        const keyword = url.searchParams.get('keyword')?.trim().toLowerCase() ?? ''
+        const status = url.searchParams.get('status') ?? ''
+        const verificationExpiresAtStart = url.searchParams.get('verificationExpiresAtStart') ?? ''
+        const verificationExpiresAtEnd = url.searchParams.get('verificationExpiresAtEnd') ?? ''
+        const page = Number(url.searchParams.get('page') || 1)
+        const pageSize = Number(url.searchParams.get('pageSize') || 10)
+        const filteredInstruments = mockInstruments.filter((instrument) => {
+            const matchesKeyword =
+                !keyword ||
+                [instrument.code, instrument.name, instrument.model].some((value) =>
+                    value.toLowerCase().includes(keyword),
+                )
+            const matchesStatus = !status || instrument.status === status
+            const matchesStartDate =
+                !verificationExpiresAtStart ||
+                instrument.verificationExpiresAt >= verificationExpiresAtStart
+            const matchesEndDate =
+                !verificationExpiresAtEnd ||
+                instrument.verificationExpiresAt <= verificationExpiresAtEnd
+
+            return matchesKeyword && matchesStatus && matchesStartDate && matchesEndDate
+        })
+        const startIndex = (page - 1) * pageSize
+        const data: InstrumentListData = {
+            items: filteredInstruments.slice(startIndex, startIndex + pageSize),
+            total: filteredInstruments.length,
+        }
+
+        return HttpResponse.json(createSuccessResponse('获取仪器设备成功', data))
+    }),
+
+    http.get('/api/base-data/instruments/options', async () => {
+        await delay(150)
+        return HttpResponse.json(createSuccessResponse('获取仪器选项成功', mockInstruments))
     }),
 
     http.post('/api/base-data/instruments', async ({ request }) => {
@@ -165,9 +200,31 @@ export const baseDataHandlers = [
         return HttpResponse.json(createSuccessResponse('删除仪器成功', null))
     }),
 
-    http.get('/api/base-data/toolboxes', async () => {
+    http.get('/api/base-data/toolboxes', async ({ request }) => {
         await delay(200)
-        return HttpResponse.json(createSuccessResponse('获取工具箱成功', mockToolboxes))
+
+        const url = new URL(request.url)
+        const keyword = url.searchParams.get('keyword')?.trim().toLowerCase() ?? ''
+        const status = url.searchParams.get('status') ?? ''
+        const remark = url.searchParams.get('remark')?.trim().toLowerCase() ?? ''
+        const page = Number(url.searchParams.get('page') || 1)
+        const pageSize = Number(url.searchParams.get('pageSize') || 10)
+        const filteredToolboxes = mockToolboxes.filter((toolbox) => {
+            const matchesKeyword =
+                !keyword ||
+                [toolbox.name, toolbox.code].some((value) => value.toLowerCase().includes(keyword))
+            const matchesStatus = !status || toolbox.status === status
+            const matchesRemark = !remark || toolbox.remark.toLowerCase().includes(remark)
+
+            return matchesKeyword && matchesStatus && matchesRemark
+        })
+        const startIndex = (page - 1) * pageSize
+        const data: ToolboxListData = {
+            items: filteredToolboxes.slice(startIndex, startIndex + pageSize),
+            total: filteredToolboxes.length,
+        }
+
+        return HttpResponse.json(createSuccessResponse('获取工具箱成功', data))
     }),
 
     http.post('/api/base-data/toolboxes', async ({ request }) => {
@@ -209,12 +266,30 @@ export const baseDataHandlers = [
         return HttpResponse.json(createSuccessResponse('获取报表组件成功', mockReportComponents))
     }),
 
-    http.get('/api/base-data/templates', async () => {
+    http.get('/api/base-data/templates', async ({ request }) => {
         await delay(200)
+
+        const url = new URL(request.url)
+        const keyword = url.searchParams.get('keyword')?.trim().toLowerCase() ?? ''
+        const version = url.searchParams.get('version')?.trim().toLowerCase() ?? ''
+        const applicableType = url.searchParams.get('applicableType')?.trim().toLowerCase() ?? ''
+        const filteredTemplates = mockInspectionTemplates.filter((template) => {
+            const matchesKeyword =
+                !keyword ||
+                [template.name, template.code].some((value) =>
+                    value.toLowerCase().includes(keyword),
+                )
+            const matchesVersion = !version || template.version.toLowerCase().includes(version)
+            const matchesApplicableType =
+                !applicableType || template.applicableType.toLowerCase().includes(applicableType)
+
+            return matchesKeyword && matchesVersion && matchesApplicableType
+        })
+
         return HttpResponse.json(
             createSuccessResponse(
                 '获取检测模板列表成功',
-                mockInspectionTemplates.map(getTemplateSummary),
+                filteredTemplates.map(getTemplateSummary),
             ),
         )
     }),
@@ -250,17 +325,6 @@ export const baseDataHandlers = [
 
         mockInspectionTemplates.splice(index, 1)
         return HttpResponse.json(createSuccessResponse('删除检测模板成功', null))
-    }),
-
-    http.patch('/api/base-data/templates/:id/status', async ({ params, request }) => {
-        await delay(200)
-        const template = mockInspectionTemplates.find((item) => item.id === params.id)
-        if (!template) return createNotFoundResponse('检测模板不存在')
-
-        const data = (await request.json()) as { status: DataStatus }
-        template.status = data.status
-        template.updatedAt = createTimestamp()
-        return HttpResponse.json(createSuccessResponse('更新模板状态成功', template))
     }),
 
     http.put('/api/base-data/templates/:id/components', async ({ params, request }) => {

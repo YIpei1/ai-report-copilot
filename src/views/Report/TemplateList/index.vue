@@ -9,6 +9,16 @@
             <el-button type="primary" @click="openCreateDialog">新增模板</el-button>
         </header>
 
+        <el-card class="template-filter-card" shadow="never">
+            <SearchFilterCard
+                v-model:model="filters"
+                :fields="searchFields"
+                :loading="loading"
+                @reset="handleReset"
+                @search="handleSearch"
+            />
+        </el-card>
+
         <el-card class="template-card" shadow="never">
             <el-table v-loading="loading" :data="templates" row-key="id">
                 <el-table-column label="模板名称" min-width="250" prop="name" />
@@ -18,20 +28,10 @@
                 <el-table-column label="报表组件" width="100">
                     <template #default="{ row }">{{ row.componentCount }} 个</template>
                 </el-table-column>
-                <el-table-column label="状态" width="90">
-                    <template #default="{ row }">
-                        <el-tag :type="row.status === 'enabled' ? 'success' : 'info'">
-                            {{ row.status === 'enabled' ? '启用' : '停用' }}
-                        </el-tag>
-                    </template>
-                </el-table-column>
-                <el-table-column fixed="right" label="操作" width="280">
+                <el-table-column fixed="right" label="操作" width="240">
                     <template #default="{ row }">
                         <el-button link type="primary" @click="openConfigDialog(row)">
                             配置组件
-                        </el-button>
-                        <el-button link type="primary" @click="toggleTemplateStatus(row)">
-                            {{ row.status === 'enabled' ? '停用' : '启用' }}
                         </el-button>
                         <el-button link type="primary" @click="createInspection"
                             >创建检测</el-button
@@ -63,14 +63,6 @@
                     <el-col :span="12">
                         <el-form-item label="模板版本" required>
                             <el-input v-model="templateForm.version" />
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="12">
-                        <el-form-item label="模板状态">
-                            <el-select v-model="templateForm.status">
-                                <el-option label="启用" value="enabled" />
-                                <el-option label="停用" value="disabled" />
-                            </el-select>
                         </el-form-item>
                     </el-col>
                     <el-col :span="24">
@@ -111,53 +103,57 @@
         >
             <div v-loading="configLoading" class="component-config">
                 <section>
-                    <h3>选择报表组件</h3>
-                    <p>勾选需要组合到当前检测模板中的组件。</p>
+                    <h3>选择并排序报表组件</h3>
+                    <p>点击选项进行勾选，拖动整个选项调整最终报告中的页面顺序。</p>
                     <div class="component-options">
-                        <el-checkbox
-                            v-for="component in reportComponents"
-                            :key="component.id"
-                            border
-                            :disabled="component.status === 'disabled'"
-                            :model-value="isComponentSelected(component.id)"
-                            @change="toggleReportComponent(component, $event)"
-                        >
-                            <strong>{{ component.name }}</strong>
-                            <small>{{ component.description }}</small>
-                        </el-checkbox>
-                    </div>
-                </section>
-
-                <section>
-                    <h3>组件顺序</h3>
-                    <p>按住左侧拖拽手柄调整最终报告的页面顺序。</p>
-                    <el-empty
-                        v-if="selectedComponents.length === 0"
-                        description="暂未选择报表组件"
-                    />
-                    <VueDraggable
-                        v-else
-                        v-model="selectedComponents"
-                        :animation="180"
-                        class="selected-components"
-                        handle=".drag-handle"
-                    >
                         <article
-                            v-for="(component, index) in selectedComponents"
-                            :key="component.id"
-                            class="selected-component"
+                            v-if="fixedCoverComponent"
+                            class="component-option component-option--fixed"
                         >
-                            <el-icon class="drag-handle"><Rank /></el-icon>
-                            <span>{{ index + 1 }}</span>
-                            <div>
-                                <strong>{{ component.name }}</strong>
-                                <small>{{ component.code }}</small>
-                            </div>
-                            <el-button link type="danger" @click="removeComponent(component.id)">
-                                移除
-                            </el-button>
+                            <span class="component-option__order">1</span>
+                            <el-checkbox border disabled :model-value="true">
+                                <strong>{{ fixedCoverComponent.name }}</strong>
+                                <el-tooltip
+                                    :content="fixedCoverComponent.description"
+                                    placement="top"
+                                    :show-after="300"
+                                >
+                                    <small>{{ fixedCoverComponent.description }}</small>
+                                </el-tooltip>
+                            </el-checkbox>
                         </article>
-                    </VueDraggable>
+
+                        <VueDraggable
+                            v-model="sortableReportComponents"
+                            :animation="180"
+                            class="component-options__sortable"
+                        >
+                            <article
+                                v-for="component in sortableReportComponents"
+                                :key="component.id"
+                                class="component-option"
+                            >
+                                <span class="component-option__order">
+                                    {{ getSelectedOrder(component.id) || '-' }}
+                                </span>
+                                <el-checkbox
+                                    border
+                                    :disabled="component.status === 'disabled'"
+                                    :model-value="isComponentSelected(component.id)"
+                                    @change="toggleReportComponent(component, $event)"
+                                >
+                                    <strong>{{ component.name }}</strong>
+                                    <el-tooltip
+                                        :content="component.description"
+                                        placement="top"
+                                        :show-after="300"
+                                    >
+                                        <small>{{ component.description }}</small>
+                                    </el-tooltip>
+                                </el-checkbox>
+                            </article>
+                        </VueDraggable>
+                    </div>
                 </section>
             </div>
 
@@ -172,7 +168,7 @@
 </template>
 
 <script setup lang="ts" name="ReportTemplateList">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import {
     createInspectionTemplate,
@@ -181,11 +177,40 @@ import {
     getInspectionTemplateList,
     getReportComponentList,
     updateInspectionTemplateComponents,
-    updateInspectionTemplateStatus,
     type InspectionTemplateFormParams,
+    type InspectionTemplateListParams,
     type InspectionTemplateSummary,
     type ReportComponentDefinition,
 } from '@/api/baseData'
+import type { SearchFilterField } from '@/components/SearchFilterCard/types'
+
+const createEmptyFilters = (): InspectionTemplateListParams => ({
+    keyword: '',
+    version: '',
+    applicableType: '',
+})
+
+// 检测模板搜索项统一交由 SearchFilterCard 生成和布局。
+const searchFields: SearchFilterField[] = [
+    {
+        prop: 'keyword',
+        label: '关键词',
+        type: 'input',
+        placeholder: '模板名称或编号',
+    },
+    {
+        prop: 'version',
+        label: '版本',
+        type: 'input',
+        placeholder: '请输入模板版本',
+    },
+    {
+        prop: 'applicableType',
+        label: '设备类型',
+        type: 'input',
+        placeholder: '请输入适用设备类型',
+    },
+]
 
 const createEmptyTemplateForm = (): InspectionTemplateFormParams => ({
     code: '',
@@ -194,7 +219,6 @@ const createEmptyTemplateForm = (): InspectionTemplateFormParams => ({
     standard: '参考 TSG T7008-2023',
     applicableType: '曳引与强制驱动电梯',
     description: '',
-    status: 'enabled',
 })
 
 const loading = ref(false)
@@ -206,18 +230,43 @@ const configDialogVisible = ref(false)
 const currentTemplateId = ref('')
 const currentTemplateName = ref('')
 const templates = ref<InspectionTemplateSummary[]>([])
+const filters = ref<InspectionTemplateListParams>(createEmptyFilters())
 const reportComponents = ref<ReportComponentDefinition[]>([])
-const selectedComponents = ref<ReportComponentDefinition[]>([])
+const selectedComponentIds = ref<string[]>([])
 const templateForm = reactive<InspectionTemplateFormParams>(createEmptyTemplateForm())
+
+// 首页固定为报告第一项，不参与拖拽排序。
+const fixedCoverComponent = computed(() => {
+    return reportComponents.value.find((component) => component.category === 'cover')
+})
+
+// 仅允许首页以外的报表组件参与拖拽，拖拽结束后重新与首页合并。
+const sortableReportComponents = computed<ReportComponentDefinition[]>({
+    get: () => reportComponents.value.filter((component) => component.category !== 'cover'),
+    set: (components) => {
+        reportComponents.value = fixedCoverComponent.value
+            ? [fixedCoverComponent.value, ...components]
+            : components
+    },
+})
 
 const loadTemplates = async (): Promise<void> => {
     loading.value = true
     try {
-        const response = await getInspectionTemplateList()
+        const response = await getInspectionTemplateList({ ...filters.value })
         templates.value = response.data
     } finally {
         loading.value = false
     }
+}
+
+const handleSearch = (): void => {
+    void loadTemplates()
+}
+
+const handleReset = (): void => {
+    filters.value = createEmptyFilters()
+    void loadTemplates()
 }
 
 const openCreateDialog = (): void => {
@@ -262,8 +311,7 @@ const openConfigDialog = async (tableRow: unknown): Promise<void> => {
             getInspectionTemplateDetail(template.id),
             getReportComponentList(),
         ])
-        reportComponents.value = componentResponse.data
-        selectedComponents.value = [...templateResponse.data.components]
+        const orderedSelectedComponents = [...templateResponse.data.components]
             .sort((first, second) => first.sort - second.sort)
             .map((config) =>
                 componentResponse.data.find(
@@ -271,30 +319,63 @@ const openConfigDialog = async (tableRow: unknown): Promise<void> => {
                 ),
             )
             .filter((component): component is ReportComponentDefinition => Boolean(component))
+        const coverComponent = componentResponse.data.find(
+            (component) => component.category === 'cover',
+        )
+        const selectedIds = new Set(orderedSelectedComponents.map((component) => component.id))
+
+        if (coverComponent) {
+            selectedIds.add(coverComponent.id)
+        }
+
+        selectedComponentIds.value = [...selectedIds]
+        reportComponents.value = [
+            ...(coverComponent ? [coverComponent] : []),
+            ...orderedSelectedComponents.filter((component) => component.category !== 'cover'),
+            ...componentResponse.data.filter(
+                (component) => component.category !== 'cover' && !selectedIds.has(component.id),
+            ),
+        ]
     } finally {
         configLoading.value = false
     }
 }
 
 const isComponentSelected = (id: string): boolean => {
-    return selectedComponents.value.some((component) => component.id === id)
+    if (fixedCoverComponent.value?.id === id) {
+        return true
+    }
+
+    return selectedComponentIds.value.includes(id)
+}
+
+const getSelectedOrder = (id: string): number => {
+    return (
+        reportComponents.value
+            .filter((component) => isComponentSelected(component.id))
+            .findIndex((component) => component.id === id) + 1
+    )
 }
 
 const toggleReportComponent = (component: ReportComponentDefinition, checked: unknown): void => {
-    if (checked) {
-        if (!isComponentSelected(component.id)) selectedComponents.value.push(component)
+    if (component.category === 'cover') {
         return
     }
 
-    removeComponent(component.id)
-}
+    if (checked) {
+        if (!isComponentSelected(component.id)) selectedComponentIds.value.push(component.id)
+        return
+    }
 
-const removeComponent = (id: string): void => {
-    selectedComponents.value = selectedComponents.value.filter((component) => component.id !== id)
+    selectedComponentIds.value = selectedComponentIds.value.filter((id) => id !== component.id)
 }
 
 const saveComponentConfig = async (): Promise<void> => {
-    if (selectedComponents.value.length === 0) {
+    const orderedSelectedComponents = reportComponents.value.filter((component) =>
+        isComponentSelected(component.id),
+    )
+
+    if (orderedSelectedComponents.length === 0) {
         ElMessage.warning('检测模板至少需要一个报表组件')
         return
     }
@@ -303,7 +384,7 @@ const saveComponentConfig = async (): Promise<void> => {
     try {
         await updateInspectionTemplateComponents({
             id: currentTemplateId.value,
-            components: selectedComponents.value.map((component, index) => ({
+            components: orderedSelectedComponents.map((component, index) => ({
                 reportComponentId: component.id,
                 sort: index + 1,
                 title: component.name,
@@ -315,14 +396,6 @@ const saveComponentConfig = async (): Promise<void> => {
     } finally {
         savingConfig.value = false
     }
-}
-
-const toggleTemplateStatus = async (tableRow: unknown): Promise<void> => {
-    const template = tableRow as InspectionTemplateSummary
-    const status = template.status === 'enabled' ? 'disabled' : 'enabled'
-    await updateInspectionTemplateStatus({ id: template.id, status })
-    ElMessage.success(status === 'enabled' ? '模板已启用' : '模板已停用')
-    await loadTemplates()
 }
 
 const handleDelete = async (tableRow: unknown): Promise<void> => {
@@ -382,6 +455,7 @@ onMounted(() => {
     color: var(--text-secondary);
 }
 
+.template-filter-card,
 .template-card {
     border-color: var(--header-border);
 }
@@ -391,10 +465,13 @@ onMounted(() => {
 }
 
 .component-config {
-    display: grid;
-    grid-template-columns: minmax(260px, 0.8fr) minmax(340px, 1.2fr);
-    gap: $space-lg;
     min-height: 320px;
+}
+
+.component-config > section,
+.component-options,
+.component-options__sortable {
+    min-width: 0;
 }
 
 .component-config h3 {
@@ -403,15 +480,49 @@ onMounted(() => {
     color: var(--text-primary);
 }
 
-.component-options,
-.selected-components {
+.component-options {
     display: grid;
     gap: $space-sm;
     margin-top: $space-md;
 }
 
+.component-options__sortable {
+    display: grid;
+    gap: $space-sm;
+}
+
+.component-option {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: $space-sm;
+    align-items: center;
+    min-width: 0;
+    cursor: grab;
+    user-select: none;
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+.component-option--fixed {
+    cursor: default;
+
+    &:active {
+        cursor: default;
+    }
+}
+
+.component-option__order {
+    color: var(--text-secondary);
+    font-size: $font-size-xs;
+    text-align: center;
+}
+
 .component-options :deep(.el-checkbox) {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     height: auto;
     min-height: 62px;
     margin: 0;
@@ -420,57 +531,19 @@ onMounted(() => {
 
 .component-options :deep(.el-checkbox__label) {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: $space-xs;
+    min-width: 0;
     overflow: hidden;
     white-space: normal;
 }
 
-.component-options small,
-.selected-component small {
+.component-options small {
     overflow: hidden;
     font-size: $font-size-xs;
     color: var(--text-secondary);
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.selected-component {
-    display: grid;
-    grid-template-columns: auto 24px minmax(0, 1fr) auto;
-    gap: $space-sm;
-    align-items: center;
-    padding: $space-sm $space-md;
-    background: var(--surface-hover-bg);
-    border: 1px solid var(--header-border);
-    border-radius: $radius-md;
-}
-
-.selected-component > span {
-    font-size: $font-size-xs;
-    color: var(--text-secondary);
-}
-
-.selected-component > div {
-    display: flex;
-    flex-direction: column;
-    gap: $space-xs;
-    min-width: 0;
-    color: var(--text-primary);
-}
-
-.drag-handle {
-    color: var(--text-secondary);
-    cursor: grab;
-}
-
-.drag-handle:active {
-    cursor: grabbing;
-}
-
-@media (max-width: $breakpoint-tablet) {
-    .component-config {
-        grid-template-columns: 1fr;
-    }
 }
 </style>

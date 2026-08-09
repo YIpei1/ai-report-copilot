@@ -74,6 +74,7 @@
 - 解构 Pinia 的响应式状态或计算属性时使用 `storeToRefs()`。
 - Pinia 的操作方法可以直接从 Store 实例调用。
 - 新增 UI 依赖前，优先复用 Element Plus 和项目已有公共组件。
+- 所有页面的搜索和筛选区域统一复用 `src/components/SearchFilterCard/`，保持字段布局、操作按钮和展开收起样式一致。
 - 已由自动导入插件提供的 API 或组件，不重复手动导入；显式导入能提升可读性或类型明确性时除外。
 
 ## Pinia 规则

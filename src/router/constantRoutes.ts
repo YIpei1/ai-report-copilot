@@ -70,10 +70,26 @@ export const constantRoutes: RouteRecordRaw[] = [
         ],
     },
     {
-        path: '/reportView',
+        path: '/reportView/:templateId/:deviceId/:toolboxId',
         name: 'ReportView',
         component: () => import('@/views/Report/ReportView/index.vue'),
-        meta: { title: '检测报表', icon: 'Document', permission: 'report:template' },
+        meta: {
+            title: '检测报表',
+            icon: 'Document',
+            permission: 'report:template',
+            hidden: true,
+        },
+    },
+    {
+        path: '/reportView/edit/:reportId',
+        name: 'ReportEdit',
+        component: () => import('@/views/Report/ReportView/index.vue'),
+        meta: {
+            title: '编辑检测报表',
+            icon: 'EditPen',
+            permission: 'report:reportView',
+            hidden: true,
+        },
     },
     {
         path: '/403',

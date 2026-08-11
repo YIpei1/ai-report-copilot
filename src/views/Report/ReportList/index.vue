@@ -41,6 +41,11 @@
                 </el-table-column>
                 <el-table-column label="创建人员" width="110" prop="createdBy" />
                 <el-table-column label="创建时间" width="170" prop="createdAt" />
+                <el-table-column fixed="right" label="操作" width="90">
+                    <template #default="{ row }">
+                        <el-button link type="primary" @click="openReport(row)">编辑</el-button>
+                    </template>
+                </el-table-column>
             </el-table>
 
             <div class="report-pagination">
@@ -57,7 +62,8 @@
 </template>
 
 <script setup lang="ts" name="ReportList">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onActivated, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { getInspectionTemplateList } from '@/api/baseData'
 import {
     getInspectionReportList,
@@ -66,6 +72,8 @@ import {
     type ReportStatus,
 } from '@/api/report'
 import type { SearchFilterField, SearchFilterOption } from '@/components/SearchFilterCard/types'
+
+const router = useRouter()
 
 type ReportFilters = {
     keyword: string
@@ -175,8 +183,13 @@ const getStatusType = (status: ReportStatus): 'danger' | 'info' | 'success' | 'w
 
 // 加载检测模板作为报告筛选项。
 const loadTemplateOptions = async (): Promise<void> => {
-    const response = await getInspectionTemplateList()
-    templateOptions.value = response.data.map((template) => ({
+    const response = await getInspectionTemplateList({
+        keyword: '',
+        version: '',
+        page: 1,
+        pageSize: 100,
+    })
+    templateOptions.value = response.data.items.map((template) => ({
         label: template.name,
         value: template.name,
     }))
@@ -217,7 +230,18 @@ const handlePageSizeChange = (): void => {
     void loadReports()
 }
 
-onMounted(() => {
+// 从报告编辑页返回时打开已保存的报告快照，不再重新组合基础数据。
+const openReport = (tableRow: unknown): void => {
+    const report = tableRow as InspectionReportSummary
+
+    void router.push({
+        name: 'ReportEdit',
+        params: { reportId: report.id },
+    })
+}
+
+// 报告管理被 KeepAlive 缓存，重新进入时刷新刚保存的报告数据。
+onActivated(() => {
     void loadReports()
     void loadTemplateOptions()
 })

@@ -13,10 +13,8 @@ async function enableMocking() {
     if (!import.meta.env.DEV || import.meta.env.VITE_ENABLE_MOCK !== 'true') {
         return
     }
-    const { worker } = await import('./mocks/browser')
-    await worker.start({
-        onUnhandledRequest: 'bypass',
-    })
+    const { startMockWorker } = await import('./mocks/browser')
+    await startMockWorker()
 }
 
 async function bootstrap() {

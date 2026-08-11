@@ -3,14 +3,14 @@ import type { ApiResponse } from '@/http/requestType'
 import type {
     InspectionTemplate,
     InspectionTemplateFormParams,
+    InspectionTemplateListData,
     InspectionTemplateListParams,
-    InspectionTemplateSummary,
     UpdateTemplateComponentsParams,
 } from './types'
 
 // 查询检测模板列表，用于模板管理页面展示。
-export const getInspectionTemplateList = (params?: InspectionTemplateListParams) => {
-    return request<ApiResponse<InspectionTemplateSummary[]>>({
+export const getInspectionTemplateList = (params: InspectionTemplateListParams) => {
+    return request<ApiResponse<InspectionTemplateListData>>({
         url: '/base-data/templates',
         method: 'get',
         params,

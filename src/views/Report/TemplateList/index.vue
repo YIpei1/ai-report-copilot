@@ -24,7 +24,6 @@
                 <el-table-column label="模板名称" min-width="250" prop="name" />
                 <el-table-column label="模板编号" min-width="190" prop="code" />
                 <el-table-column label="版本" width="110" prop="version" />
-                <el-table-column label="适用设备类型" min-width="190" prop="applicableType" />
                 <el-table-column label="报表组件" width="100">
                     <template #default="{ row }">{{ row.componentCount }} 个</template>
                 </el-table-column>
@@ -33,13 +32,23 @@
                         <el-button link type="primary" @click="openConfigDialog(row)">
                             配置组件
                         </el-button>
-                        <el-button link type="primary" @click="createInspection"
+                        <el-button link type="primary" @click="createInspection(row)"
                             >创建检测</el-button
                         >
                         <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
                     </template>
                 </el-table-column>
             </el-table>
+
+            <div class="template-pagination">
+                <MyPagination
+                    v-model:current-page="pagination.page"
+                    v-model:page-size="pagination.pageSize"
+                    :total="total"
+                    @current-change="handleCurrentPageChange"
+                    @size-change="handlePageSizeChange"
+                />
+            </div>
         </el-card>
 
         <el-dialog
@@ -66,16 +75,6 @@
                         </el-form-item>
                     </el-col>
                     <el-col :span="24">
-                        <el-form-item label="适用设备类型" required>
-                            <el-input v-model="templateForm.applicableType" />
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="24">
-                        <el-form-item label="参考依据" required>
-                            <el-input v-model="templateForm.standard" />
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="24">
                         <el-form-item label="模板说明">
                             <el-input
                                 v-model="templateForm.description"
@@ -92,6 +91,51 @@
                 <el-button :loading="creating" type="primary" @click="submitTemplate">
                     创建并配置组件
                 </el-button>
+            </template>
+        </el-dialog>
+
+        <el-dialog
+            v-model="inspectionDialogVisible"
+            destroy-on-close
+            :title="`创建检测：${currentInspectionTemplate?.name || ''}`"
+            width="520px"
+        >
+            <el-form label-width="90px">
+                <el-form-item label="检测设备" required>
+                    <el-select
+                        v-model="selectedDeviceId"
+                        filterable
+                        :loading="deviceLoading"
+                        placeholder="请选择设备台账"
+                    >
+                        <el-option
+                            v-for="device in deviceOptions"
+                            :key="device.id"
+                            :label="`${device.name}（${device.code}）`"
+                            :value="device.id"
+                        />
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="工具箱" required>
+                    <el-select
+                        v-model="selectedToolboxId"
+                        filterable
+                        :loading="toolboxLoading"
+                        placeholder="请选择当前可用的工具箱"
+                    >
+                        <el-option
+                            v-for="toolbox in toolboxOptions"
+                            :key="toolbox.id"
+                            :label="`${toolbox.name}（${toolbox.code}）`"
+                            :value="toolbox.id"
+                        />
+                    </el-select>
+                </el-form-item>
+            </el-form>
+
+            <template #footer>
+                <el-button @click="inspectionDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="confirmCreateInspection">下一步</el-button>
             </template>
         </el-dialog>
 
@@ -169,25 +213,33 @@
 
 <script setup lang="ts" name="ReportTemplateList">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { VueDraggable } from 'vue-draggable-plus'
 import {
     createInspectionTemplate,
     deleteInspectionTemplate,
+    getAvailableToolboxOptions,
+    getDeviceList,
     getInspectionTemplateDetail,
     getInspectionTemplateList,
     getReportComponentList,
     updateInspectionTemplateComponents,
+    type Device,
     type InspectionTemplateFormParams,
     type InspectionTemplateListParams,
     type InspectionTemplateSummary,
     type ReportComponentDefinition,
+    type Toolbox,
 } from '@/api/baseData'
 import type { SearchFilterField } from '@/components/SearchFilterCard/types'
 
-const createEmptyFilters = (): InspectionTemplateListParams => ({
+const router = useRouter()
+
+type TemplateFilters = Pick<InspectionTemplateListParams, 'keyword' | 'version'>
+
+const createEmptyFilters = (): TemplateFilters => ({
     keyword: '',
     version: '',
-    applicableType: '',
 })
 
 // 检测模板搜索项统一交由 SearchFilterCard 生成和布局。
@@ -204,35 +256,40 @@ const searchFields: SearchFilterField[] = [
         type: 'input',
         placeholder: '请输入模板版本',
     },
-    {
-        prop: 'applicableType',
-        label: '设备类型',
-        type: 'input',
-        placeholder: '请输入适用设备类型',
-    },
 ]
 
 const createEmptyTemplateForm = (): InspectionTemplateFormParams => ({
     code: '',
     name: '',
     version: '1.0',
-    standard: '参考 TSG T7008-2023',
-    applicableType: '曳引与强制驱动电梯',
     description: '',
 })
 
 const loading = ref(false)
 const creating = ref(false)
+const deviceLoading = ref(false)
+const toolboxLoading = ref(false)
 const configLoading = ref(false)
 const savingConfig = ref(false)
 const createDialogVisible = ref(false)
 const configDialogVisible = ref(false)
+const inspectionDialogVisible = ref(false)
 const currentTemplateId = ref('')
 const currentTemplateName = ref('')
 const templates = ref<InspectionTemplateSummary[]>([])
-const filters = ref<InspectionTemplateListParams>(createEmptyFilters())
+const total = ref(0)
+const deviceOptions = ref<Device[]>([])
+const toolboxOptions = ref<Toolbox[]>([])
+const filters = ref<TemplateFilters>(createEmptyFilters())
+const pagination = reactive({
+    page: 1,
+    pageSize: 10,
+})
 const reportComponents = ref<ReportComponentDefinition[]>([])
 const selectedComponentIds = ref<string[]>([])
+const selectedDeviceId = ref('')
+const selectedToolboxId = ref('')
+const currentInspectionTemplate = ref<InspectionTemplateSummary>()
 const templateForm = reactive<InspectionTemplateFormParams>(createEmptyTemplateForm())
 
 // 首页固定为报告第一项，不参与拖拽排序。
@@ -253,20 +310,49 @@ const sortableReportComponents = computed<ReportComponentDefinition[]>({
 const loadTemplates = async (): Promise<void> => {
     loading.value = true
     try {
-        const response = await getInspectionTemplateList({ ...filters.value })
-        templates.value = response.data
+        const response = await getInspectionTemplateList({
+            keyword: filters.value.keyword,
+            version: filters.value.version,
+            page: pagination.page,
+            pageSize: pagination.pageSize,
+        })
+        templates.value = response.data.items
+        total.value = response.data.total
     } finally {
         loading.value = false
     }
 }
 
 const handleSearch = (): void => {
+    pagination.page = 1
     void loadTemplates()
 }
 
 const handleReset = (): void => {
     filters.value = createEmptyFilters()
+    pagination.page = 1
     void loadTemplates()
+}
+
+const handleCurrentPageChange = (): void => {
+    void loadTemplates()
+}
+
+const handlePageSizeChange = (): void => {
+    pagination.page = 1
+    void loadTemplates()
+}
+
+// 加载可用工具箱，供创建检测时选择本次任务实际使用的仪器组合。
+const loadToolboxOptions = async (): Promise<void> => {
+    toolboxLoading.value = true
+
+    try {
+        const response = await getAvailableToolboxOptions()
+        toolboxOptions.value = response.data
+    } finally {
+        toolboxLoading.value = false
+    }
 }
 
 const openCreateDialog = (): void => {
@@ -275,13 +361,7 @@ const openCreateDialog = (): void => {
 }
 
 const submitTemplate = async (): Promise<void> => {
-    const requiredValues = [
-        templateForm.code,
-        templateForm.name,
-        templateForm.version,
-        templateForm.standard,
-        templateForm.applicableType,
-    ]
+    const requiredValues = [templateForm.code, templateForm.name, templateForm.version]
     if (requiredValues.some((value) => !value.trim())) {
         ElMessage.warning('请完整填写检测模板必填信息')
         return
@@ -408,14 +488,58 @@ const handleDelete = async (tableRow: unknown): Promise<void> => {
         })
         await deleteInspectionTemplate(template.id)
         ElMessage.success('检测模板删除成功')
+
+        if (templates.value.length === 1 && pagination.page > 1) {
+            pagination.page -= 1
+        }
+
         await loadTemplates()
     } catch {
         // 用户取消删除时保留当前数据。
     }
 }
 
-const createInspection = (): void => {
-    ElMessage.info('创建检测功能暂未接入')
+// 打开创建检测弹窗，并加载当前可用的设备台账和工具箱。
+const createInspection = (tableRow: unknown): void => {
+    currentInspectionTemplate.value = tableRow as InspectionTemplateSummary
+    selectedDeviceId.value = ''
+    selectedToolboxId.value = ''
+    inspectionDialogVisible.value = true
+    deviceLoading.value = true
+    void loadToolboxOptions()
+
+    void getDeviceList({
+        keyword: '',
+        status: 'active',
+        page: 1,
+        pageSize: 100,
+    })
+        .then((response) => {
+            deviceOptions.value = response.data.items
+        })
+        .finally(() => {
+            deviceLoading.value = false
+        })
+}
+
+const confirmCreateInspection = (): void => {
+    const template = currentInspectionTemplate.value
+
+    if (!template || !selectedDeviceId.value || !selectedToolboxId.value) {
+        ElMessage.warning('请选择本次检测使用的设备和工具箱')
+        return
+    }
+
+    inspectionDialogVisible.value = false
+
+    void router.push({
+        name: 'ReportView',
+        params: {
+            templateId: template.id,
+            deviceId: selectedDeviceId.value,
+            toolboxId: selectedToolboxId.value,
+        },
+    })
 }
 
 onMounted(() => {
@@ -458,6 +582,12 @@ onMounted(() => {
 .template-filter-card,
 .template-card {
     border-color: var(--header-border);
+}
+
+.template-pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: $space-lg;
 }
 
 :deep(.el-select) {

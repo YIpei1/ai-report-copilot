@@ -24,6 +24,7 @@
                 <el-table-column label="设备名称" min-width="190" prop="name" />
                 <el-table-column label="设备编号" min-width="130" prop="code" />
                 <el-table-column label="设备类别" min-width="180" prop="category" />
+                <el-table-column label="制造单位" min-width="190" prop="manufacturer" />
                 <el-table-column label="安装地点" min-width="150" prop="location" />
                 <el-table-column label="额定载重" width="110">
                     <template #default="{ row }">{{ row.ratedLoad }} kg</template>
@@ -67,42 +68,59 @@
                 <el-row :gutter="16">
                     <el-col :span="12">
                         <el-form-item label="设备名称" required>
-                            <el-input v-model="deviceForm.name" />
+                            <el-input v-model="deviceForm.name" placeholder="请输入设备名称" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
                         <el-form-item label="设备编号" required>
-                            <el-input v-model="deviceForm.code" />
+                            <el-input v-model="deviceForm.code" placeholder="请输入设备编号" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
                         <el-form-item label="设备类别" required>
-                            <el-input v-model="deviceForm.category" />
+                            <el-input v-model="deviceForm.category" placeholder="请输入设备类别" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
                         <el-form-item label="产品型号" required>
-                            <el-input v-model="deviceForm.model" />
+                            <el-input v-model="deviceForm.model" placeholder="请输入产品型号" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
                         <el-form-item label="登记证编号" required>
-                            <el-input v-model="deviceForm.registrationCode" />
+                            <el-input
+                                v-model="deviceForm.registrationCode"
+                                placeholder="请输入登记证编号"
+                            />
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
                         <el-form-item label="安装地点" required>
-                            <el-input v-model="deviceForm.location" />
+                            <el-input v-model="deviceForm.location" placeholder="请输入安装地点" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
                         <el-form-item label="使用单位" required>
-                            <el-input v-model="deviceForm.userOrganization" />
+                            <el-input
+                                v-model="deviceForm.userOrganization"
+                                placeholder="请输入使用单位"
+                            />
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="制造单位" required>
+                            <el-input
+                                v-model="deviceForm.manufacturer"
+                                placeholder="请输入制造单位"
+                            />
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
                         <el-form-item label="维保单位" required>
-                            <el-input v-model="deviceForm.maintenanceOrganization" />
+                            <el-input
+                                v-model="deviceForm.maintenanceOrganization"
+                                placeholder="请输入维保单位"
+                            />
                         </el-form-item>
                     </el-col>
                     <el-col :span="8">
@@ -207,6 +225,7 @@ const createEmptyDeviceForm = (): DeviceFormParams => ({
     registrationCode: '',
     location: '',
     userOrganization: '',
+    manufacturer: '',
     maintenanceOrganization: '',
     ratedLoad: 1000,
     ratedSpeed: 1.75,
@@ -290,6 +309,7 @@ const openEditDialog = (tableRow: unknown): void => {
         registrationCode: device.registrationCode,
         location: device.location,
         userOrganization: device.userOrganization,
+        manufacturer: device.manufacturer,
         maintenanceOrganization: device.maintenanceOrganization,
         ratedLoad: device.ratedLoad,
         ratedSpeed: device.ratedSpeed,
@@ -310,6 +330,7 @@ const validateDeviceForm = (): boolean => {
         deviceForm.registrationCode,
         deviceForm.location,
         deviceForm.userOrganization,
+        deviceForm.manufacturer,
         deviceForm.maintenanceOrganization,
     ]
 

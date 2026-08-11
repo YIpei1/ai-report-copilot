@@ -17,6 +17,14 @@ export const getDeviceList = (params: DeviceListParams) => {
     })
 }
 
+// 根据设备 id 查询完整台账信息，用于创建检测和生成报告快照。
+export const getDeviceDetail = (id: string) => {
+    return request<ApiResponse<Device>>({
+        url: `/base-data/devices/${id}`,
+        method: 'get',
+    })
+}
+
 // 新增一条设备台账记录。
 export const createDevice = (data: DeviceFormParams) => {
     return request<ApiResponse<Device>, DeviceFormParams>({

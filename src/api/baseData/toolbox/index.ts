@@ -17,6 +17,22 @@ export const getToolboxList = (params: ToolboxListParams) => {
     })
 }
 
+// 查询创建检测时可选择的工具箱，只返回自身启用且关联仪器均可用的记录。
+export const getAvailableToolboxOptions = () => {
+    return request<ApiResponse<Toolbox[]>>({
+        url: '/base-data/toolboxes/options/available',
+        method: 'get',
+    })
+}
+
+// 根据工具箱 id 查询关联的仪器设备 id。
+export const getToolboxDetail = (id: string) => {
+    return request<ApiResponse<Toolbox>>({
+        url: `/base-data/toolboxes/${id}`,
+        method: 'get',
+    })
+}
+
 // 新增工具箱，并保存所选仪器之间的关联关系。
 export const createToolbox = (data: ToolboxFormParams) => {
     return request<ApiResponse<Toolbox>, ToolboxFormParams>({

@@ -11,6 +11,7 @@ export interface Device {
     registrationCode: string
     location: string
     userOrganization: string
+    manufacturer: string
     maintenanceOrganization: string
     ratedLoad: number
     ratedSpeed: number
@@ -45,6 +46,7 @@ export interface DeviceFormParams {
     registrationCode: string
     location: string
     userOrganization: string
+    manufacturer: string
     maintenanceOrganization: string
     ratedLoad: number
     ratedSpeed: number

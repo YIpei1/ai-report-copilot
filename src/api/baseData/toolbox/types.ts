@@ -13,6 +13,12 @@ export interface Toolbox {
     updatedAt: string
 }
 
+// 工具箱管理列表额外展示根据关联仪器实时计算的可用状态。
+export interface ToolboxListItem extends Toolbox {
+    available: boolean
+    unavailableReason: string
+}
+
 // 工具箱分页查询参数。
 export interface ToolboxListParams {
     keyword?: string
@@ -24,7 +30,7 @@ export interface ToolboxListParams {
 
 // 工具箱分页查询结果。
 export interface ToolboxListData {
-    items: Toolbox[]
+    items: ToolboxListItem[]
     total: number
 }
 

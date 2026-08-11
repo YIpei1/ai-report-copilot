@@ -6,44 +6,27 @@ import type {
     Toolbox,
 } from '@/api/baseData'
 
+// 默认提供一条完整设备，方便首次运行项目时直接体验检测流程。
 export const mockDevices: Device[] = [
     {
-        id: 'device-001',
-        name: '研发中心 1 号客梯',
-        code: 'DT-2026-001',
+        id: 'device-default-demo',
+        name: '演示中心 1 号客梯',
+        code: 'DT-DEMO-001',
         category: '曳引驱动乘客电梯',
         model: 'TKJ1000/1.75-JXW',
-        registrationCode: '311042010020260001',
-        location: '研发中心 A 座',
-        userOrganization: '中安科技有限公司',
-        maintenanceOrganization: '中安电梯维保有限公司',
+        registrationCode: '311000000020260001',
+        location: '演示中心 A 座',
+        userOrganization: '示例科技有限公司',
+        manufacturer: '示例电梯制造有限公司',
+        maintenanceOrganization: '示例电梯维保有限公司',
         ratedLoad: 1000,
         ratedSpeed: 1.75,
-        floors: 18,
-        stations: 18,
-        doors: 18,
+        floors: 12,
+        stations: 12,
+        doors: 12,
         status: 'active',
-        createdAt: '2026-07-20 09:30:00',
-        updatedAt: '2026-08-03 14:20:00',
-    },
-    {
-        id: 'device-002',
-        name: '物流中心载货电梯',
-        code: 'DT-2026-002',
-        category: '曳引驱动载货电梯',
-        model: 'THJ3000/0.50-JXW',
-        registrationCode: '321042010020260002',
-        location: '物流中心 1 号库',
-        userOrganization: '中安物流有限公司',
-        maintenanceOrganization: '城市电梯服务有限公司',
-        ratedLoad: 3000,
-        ratedSpeed: 0.5,
-        floors: 5,
-        stations: 5,
-        doors: 5,
-        status: 'active',
-        createdAt: '2026-07-21 11:20:00',
-        updatedAt: '2026-08-01 16:45:00',
+        createdAt: '2026-08-01 09:00:00',
+        updatedAt: '2026-08-01 09:00:00',
     },
 ]
 
@@ -234,22 +217,5 @@ export const mockReportComponents: ReportComponentDefinition[] = [
     },
 ]
 
-export const mockInspectionTemplates: InspectionTemplate[] = [
-    {
-        id: 'template-traction-elevator-demo',
-        code: 'ZAJT/JSJL30.01-DEMO',
-        name: '曳引驱动电梯自行检测模板（演示版）',
-        version: 'Demo 2.0',
-        standard: '参考 TSG T7008-2023',
-        applicableType: '曳引与强制驱动电梯',
-        description: '通过报表组件组合生成检测报告，当前仅保留演示所需内容。',
-        isDemo: true,
-        components: mockReportComponents.map((component, index) => ({
-            reportComponentId: component.id,
-            sort: index + 1,
-            title: component.name,
-        })),
-        createdAt: '2026-08-01 09:00:00',
-        updatedAt: '2026-08-06 10:00:00',
-    },
-]
+// 检测模板由用户按实际需要创建，不预置固定演示模板。
+export const mockInspectionTemplates: InspectionTemplate[] = []

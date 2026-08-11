@@ -44,6 +44,19 @@
                         </el-tag>
                     </template>
                 </el-table-column>
+                <el-table-column label="当前可用性" width="120">
+                    <template #default="{ row }">
+                        <el-tooltip
+                            :content="row.unavailableReason"
+                            :disabled="row.available"
+                            placement="top"
+                        >
+                            <el-tag :type="row.available ? 'success' : 'warning'">
+                                {{ row.available ? '可用' : '不可用' }}
+                            </el-tag>
+                        </el-tooltip>
+                    </template>
+                </el-table-column>
                 <el-table-column fixed="right" label="操作" width="140">
                     <template #default="{ row }">
                         <el-button link type="primary" @click="openEditDialog(row)">编辑</el-button>
@@ -89,7 +102,7 @@
                         placeholder="请选择仪器设备"
                     >
                         <el-option
-                            v-for="instrument in availableInstruments"
+                            v-for="instrument in instruments"
                             :key="instrument.id"
                             :label="`${instrument.name}（${instrument.code}）`"
                             :value="instrument.id"
@@ -118,7 +131,7 @@
 </template>
 
 <script setup lang="ts" name="ToolboxList">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onActivated, reactive, ref } from 'vue'
 import {
     createToolbox,
     deleteToolbox,
@@ -129,6 +142,7 @@ import {
     type Instrument,
     type Toolbox,
     type ToolboxFormParams,
+    type ToolboxListItem,
 } from '@/api/baseData'
 import type { SearchFilterField } from '@/components/SearchFilterCard/types'
 
@@ -185,17 +199,13 @@ const dialogVisible = ref(false)
 const editingId = ref('')
 const filters = ref<ToolboxFilters>(createEmptyFilters())
 const instruments = ref<Instrument[]>([])
-const toolboxes = ref<Toolbox[]>([])
+const toolboxes = ref<ToolboxListItem[]>([])
 const total = ref(0)
 const pagination = reactive({
     page: 1,
     pageSize: 10,
 })
 const toolboxForm = reactive<ToolboxFormParams>(createEmptyForm())
-
-const availableInstruments = computed(() => {
-    return instruments.value.filter((instrument) => instrument.status === 'available')
-})
 
 const getInstrumentNames = (instrumentIds: string[]): string[] => {
     return instrumentIds.map((id) => instruments.value.find((item) => item.id === id)?.name || id)
@@ -312,7 +322,8 @@ const handleDelete = async (tableRow: unknown): Promise<void> => {
     }
 }
 
-onMounted(() => {
+// 页面被 KeepAlive 缓存后，重新进入时刷新仪器和工具箱的动态可用状态。
+onActivated(() => {
     void loadBaseData()
 })
 </script>

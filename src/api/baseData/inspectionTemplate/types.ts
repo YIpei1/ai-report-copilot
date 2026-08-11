@@ -11,8 +11,6 @@ export interface InspectionTemplate {
     code: string
     name: string
     version: string
-    standard: string
-    applicableType: string
     description: string
     isDemo: boolean
     components: TemplateComponentConfig[]
@@ -26,8 +24,6 @@ export interface InspectionTemplateSummary {
     code: string
     name: string
     version: string
-    standard: string
-    applicableType: string
     componentCount: number
     updatedAt: string
 }
@@ -37,8 +33,6 @@ export interface InspectionTemplateFormParams {
     code: string
     name: string
     version: string
-    standard: string
-    applicableType: string
     description: string
 }
 
@@ -46,7 +40,14 @@ export interface InspectionTemplateFormParams {
 export interface InspectionTemplateListParams {
     keyword: string
     version: string
-    applicableType: string
+    page: number
+    pageSize: number
+}
+
+// 检测模板列表的分页响应数据。
+export interface InspectionTemplateListData {
+    items: InspectionTemplateSummary[]
+    total: number
 }
 
 // 保存模板组件及排列顺序时提交的参数。

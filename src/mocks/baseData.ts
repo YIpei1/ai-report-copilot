@@ -6,7 +6,7 @@ import type {
     InspectionTemplate,
     InspectionTemplateFormParams,
     InspectionTemplateListData,
-    InspectionTemplateSummary,
+    InspectionTemplateItem,
     Instrument,
     InstrumentFormParams,
     InstrumentListData,
@@ -46,7 +46,7 @@ const createTimestamp = (): string => {
     return new Date().toLocaleString('zh-CN', { hour12: false })
 }
 
-const getTemplateSummary = (template: InspectionTemplate): InspectionTemplateSummary => ({
+const getTemplateSummary = (template: InspectionTemplate): InspectionTemplateItem => ({
     id: template.id,
     code: template.code,
     name: template.name,

@@ -5,10 +5,11 @@ import type {
     InspectionTemplateFormParams,
     InspectionTemplateListData,
     InspectionTemplateListParams,
+    UpdateTemplateComponentsData,
     UpdateTemplateComponentsParams,
 } from './types'
 
-// 查询检测模板列表，用于模板管理页面展示。
+// 分页查询检测模板，可按模板名称、编号和版本筛选。
 export const getInspectionTemplateList = (params: InspectionTemplateListParams) => {
     return request<ApiResponse<InspectionTemplateListData>>({
         url: '/base-data/templates',
@@ -17,12 +18,20 @@ export const getInspectionTemplateList = (params: InspectionTemplateListParams) 
     })
 }
 
-// 新增检测模板基础信息，组件配置由后续接口单独保存。
+// 新增检测模板基础信息，组件配置通过独立接口保存。
 export const createInspectionTemplate = (data: InspectionTemplateFormParams) => {
     return request<ApiResponse<InspectionTemplate>, InspectionTemplateFormParams>({
         url: '/base-data/templates',
         method: 'post',
         data,
+    })
+}
+
+// 根据模板 id 查询模板详情及已配置的报表组件。
+export const getInspectionTemplateDetail = (id: string) => {
+    return request<ApiResponse<InspectionTemplate>>({
+        url: `/base-data/templates/${id}`,
+        method: 'get',
     })
 }
 
@@ -34,23 +43,12 @@ export const deleteInspectionTemplate = (id: string) => {
     })
 }
 
-// 查询检测模板详情及已配置的报表组件。
-export const getInspectionTemplateDetail = (id: string) => {
-    return request<ApiResponse<InspectionTemplate>>({
-        url: `/base-data/templates/${id}`,
-        method: 'get',
-    })
-}
-
-// 保存检测模板选中的报表组件及组件排列顺序。
+// 保存检测模板选择的报表组件及最终排列顺序。
 export const updateInspectionTemplateComponents = ({
     id,
     components,
 }: UpdateTemplateComponentsParams) => {
-    return request<
-        ApiResponse<InspectionTemplate>,
-        Pick<UpdateTemplateComponentsParams, 'components'>
-    >({
+    return request<ApiResponse<InspectionTemplate>, UpdateTemplateComponentsData>({
         url: `/base-data/templates/${id}/components`,
         method: 'put',
         data: { components },

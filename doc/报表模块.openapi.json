@@ -1,0 +1,1466 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "AI 报告助手 - 报表模块 API",
+        "description": "检测模板、创建检测依赖、报告快照保存与编辑接口。当前由 MSW 和 IndexedDB 提供模拟实现。",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "开发环境 API 基础地址"
+        }
+    ],
+    "tags": [
+        {
+            "name": "检测模板",
+            "description": "检测模板基础信息和组件配置"
+        },
+        {
+            "name": "创建检测依赖",
+            "description": "创建报告时需要的设备、工具箱、仪器和报表组件"
+        },
+        {
+            "name": "检测报告",
+            "description": "报告列表、快照保存和重新编辑"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ],
+    "paths": {
+        "/base-data/templates": {
+            "get": {
+                "tags": ["检测模板"],
+                "summary": "查询检测模板列表",
+                "operationId": "getInspectionTemplateList",
+                "parameters": [
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "description": "模板名称或编号",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "query",
+                        "description": "模板版本",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/Page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PageSize"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InspectionTemplateListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": ["检测模板"],
+                "summary": "创建检测模板",
+                "operationId": "createInspectionTemplate",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InspectionTemplateForm"
+                            },
+                            "example": {
+                                "code": "TPL-001",
+                                "name": "曳引驱动电梯自行检测模板",
+                                "version": "1.0",
+                                "description": "用于生成电梯自行检测报告"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InspectionTemplateResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/base-data/templates/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/Id"
+                }
+            ],
+            "get": {
+                "tags": ["检测模板"],
+                "summary": "查询检测模板详情",
+                "operationId": "getInspectionTemplateDetail",
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InspectionTemplateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["检测模板"],
+                "summary": "删除检测模板",
+                "operationId": "deleteInspectionTemplate",
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NullResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/base-data/templates/{id}/components": {
+            "put": {
+                "tags": ["检测模板"],
+                "summary": "保存模板组件配置",
+                "description": "保存模板选择的报表组件及排列顺序。首页组件固定为第一项。",
+                "operationId": "updateInspectionTemplateComponents",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/Id"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["components"],
+                                "properties": {
+                                    "components": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/TemplateComponentConfig"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "保存成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InspectionTemplateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/base-data/report-components": {
+            "get": {
+                "tags": ["创建检测依赖"],
+                "summary": "查询报表组件列表",
+                "operationId": "getReportComponentList",
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ReportComponentListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/base-data/devices": {
+            "get": {
+                "tags": ["创建检测依赖"],
+                "summary": "查询设备台账列表",
+                "description": "创建检测时传入 status=active，只展示启用设备。",
+                "operationId": "getDeviceList",
+                "parameters": [
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "description": "设备名称、编号、注册代码或安装地点",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "设备状态",
+                        "schema": {
+                            "$ref": "#/components/schemas/DeviceStatus"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/Page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PageSize"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeviceListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/base-data/devices/{id}": {
+            "get": {
+                "tags": ["创建检测依赖"],
+                "summary": "查询设备详情",
+                "operationId": "getDeviceDetail",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/Id"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeviceResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/base-data/toolboxes/options/available": {
+            "get": {
+                "tags": ["创建检测依赖"],
+                "summary": "查询可用工具箱选项",
+                "description": "只返回自身启用、已配置仪器且关联仪器均未停用和过期的工具箱。",
+                "operationId": "getAvailableToolboxOptions",
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ToolboxListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/base-data/toolboxes/{id}": {
+            "get": {
+                "tags": ["创建检测依赖"],
+                "summary": "查询工具箱详情",
+                "operationId": "getToolboxDetail",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/Id"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ToolboxResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/base-data/instruments/options": {
+            "get": {
+                "tags": ["创建检测依赖"],
+                "summary": "查询仪器设备选项",
+                "operationId": "getInstrumentOptions",
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InstrumentListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports": {
+            "get": {
+                "tags": ["检测报告"],
+                "summary": "查询检测报告列表",
+                "operationId": "getInspectionReportList",
+                "parameters": [
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "description": "报告名称、报告编号或设备名称",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "description": "创建方式",
+                        "schema": {
+                            "$ref": "#/components/schemas/ReportSource"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "报告状态",
+                        "schema": {
+                            "$ref": "#/components/schemas/ReportStatus"
+                        }
+                    },
+                    {
+                        "name": "createdBy",
+                        "in": "query",
+                        "description": "创建人员",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "createdAtStart",
+                        "in": "query",
+                        "description": "创建时间起点",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "createdAtEnd",
+                        "in": "query",
+                        "description": "创建时间终点",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "templateName",
+                        "in": "query",
+                        "description": "检测模板名称",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/Page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PageSize"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InspectionReportListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": ["检测报告"],
+                "summary": "首次保存检测报告",
+                "description": "保存报告文档、校验结果以及模板、设备、工具箱和仪器快照。",
+                "operationId": "createInspectionReport",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveInspectionReportRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "保存成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InspectionReportResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/{id}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/Id"
+                }
+            ],
+            "get": {
+                "tags": ["检测报告"],
+                "summary": "查询检测报告详情",
+                "description": "编辑报告时只读取该快照接口，不重新请求当前基础数据。",
+                "operationId": "getInspectionReportDetail",
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InspectionReportResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            },
+            "put": {
+                "tags": ["检测报告"],
+                "summary": "更新检测报告",
+                "operationId": "updateInspectionReport",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveInspectionReportRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InspectionReportResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        },
+        "parameters": {
+            "Id": {
+                "name": "id",
+                "in": "path",
+                "required": true,
+                "description": "业务数据 ID",
+                "schema": {
+                    "type": "string"
+                }
+            },
+            "Page": {
+                "name": "page",
+                "in": "query",
+                "required": true,
+                "description": "当前页，从 1 开始",
+                "schema": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 1
+                }
+            },
+            "PageSize": {
+                "name": "pageSize",
+                "in": "query",
+                "required": true,
+                "description": "每页数量",
+                "schema": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 10
+                }
+            }
+        },
+        "responses": {
+            "NotFound": {
+                "description": "目标数据不存在",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        },
+                        "example": {
+                            "code": 10004,
+                            "message": "目标数据不存在",
+                            "data": null
+                        }
+                    }
+                }
+            }
+        },
+        "schemas": {
+            "ApiResponseBase": {
+                "type": "object",
+                "required": ["code", "message"],
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "请求成功"
+                    }
+                }
+            },
+            "ErrorResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponseBase"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["data"],
+                        "properties": {
+                            "data": {
+                                "nullable": true
+                            }
+                        }
+                    }
+                ]
+            },
+            "NullResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponseBase"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["data"],
+                        "properties": {
+                            "data": {
+                                "nullable": true,
+                                "example": null
+                            }
+                        }
+                    }
+                ]
+            },
+            "DataStatus": {
+                "type": "string",
+                "enum": ["enabled", "disabled"]
+            },
+            "DeviceStatus": {
+                "type": "string",
+                "enum": ["active", "disabled"]
+            },
+            "InstrumentStatus": {
+                "type": "string",
+                "enum": ["available", "disabled", "expired"]
+            },
+            "ReportSource": {
+                "type": "string",
+                "enum": ["ai", "manual"]
+            },
+            "ReportStatus": {
+                "type": "string",
+                "enum": ["approved", "draft", "pending_review", "rejected"]
+            },
+            "TemplateComponentConfig": {
+                "type": "object",
+                "required": ["reportComponentId", "sort", "title"],
+                "properties": {
+                    "reportComponentId": {
+                        "type": "string",
+                        "description": "报表组件 ID"
+                    },
+                    "sort": {
+                        "type": "integer",
+                        "description": "报告页面顺序"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "组件展示标题"
+                    }
+                }
+            },
+            "InspectionTemplateForm": {
+                "type": "object",
+                "required": ["code", "name", "version", "description"],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "模板编号"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "模板名称"
+                    },
+                    "version": {
+                        "type": "string",
+                        "description": "模板版本"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "模板说明"
+                    }
+                }
+            },
+            "InspectionTemplateItem": {
+                "type": "object",
+                "required": ["id", "code", "name", "version", "componentCount", "updatedAt"],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "string"
+                    },
+                    "componentCount": {
+                        "type": "integer"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                }
+            },
+            "InspectionTemplate": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/InspectionTemplateForm"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["id", "isDemo", "components", "createdAt", "updatedAt"],
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "isDemo": {
+                                "type": "boolean"
+                            },
+                            "components": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/TemplateComponentConfig"
+                                }
+                            },
+                            "createdAt": {
+                                "type": "string"
+                            },
+                            "updatedAt": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ]
+            },
+            "ReportFieldDefinition": {
+                "type": "object",
+                "required": ["key", "label", "dataSource", "required"],
+                "properties": {
+                    "key": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "dataSource": {
+                        "type": "string"
+                    },
+                    "required": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "InspectionItemDefinition": {
+                "type": "object",
+                "required": ["sequence", "code", "title", "requirement"],
+                "properties": {
+                    "sequence": {
+                        "type": "integer"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "requirement": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ReportComponentDefinition": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "category",
+                    "description",
+                    "fields",
+                    "inspectionItems",
+                    "status",
+                    "updatedAt"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "category": {
+                        "type": "string",
+                        "enum": [
+                            "cover",
+                            "inspection-record",
+                            "conditions-instruments",
+                            "inspection-items"
+                        ]
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "fields": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ReportFieldDefinition"
+                        }
+                    },
+                    "inspectionItems": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InspectionItemDefinition"
+                        }
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/DataStatus"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Device": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "code",
+                    "category",
+                    "model",
+                    "registrationCode",
+                    "location",
+                    "userOrganization",
+                    "manufacturer",
+                    "maintenanceOrganization",
+                    "ratedLoad",
+                    "ratedSpeed",
+                    "floors",
+                    "stations",
+                    "doors",
+                    "status",
+                    "createdAt",
+                    "updatedAt"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "category": {
+                        "type": "string"
+                    },
+                    "model": {
+                        "type": "string"
+                    },
+                    "registrationCode": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "userOrganization": {
+                        "type": "string"
+                    },
+                    "manufacturer": {
+                        "type": "string"
+                    },
+                    "maintenanceOrganization": {
+                        "type": "string"
+                    },
+                    "ratedLoad": {
+                        "type": "number"
+                    },
+                    "ratedSpeed": {
+                        "type": "number"
+                    },
+                    "floors": {
+                        "type": "integer"
+                    },
+                    "stations": {
+                        "type": "integer"
+                    },
+                    "doors": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/DeviceStatus"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Instrument": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "model",
+                    "serialNumber",
+                    "purpose",
+                    "verificationExpiresAt",
+                    "status",
+                    "createdAt",
+                    "updatedAt"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "model": {
+                        "type": "string"
+                    },
+                    "serialNumber": {
+                        "type": "string"
+                    },
+                    "purpose": {
+                        "type": "string"
+                    },
+                    "verificationExpiresAt": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/InstrumentStatus"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Toolbox": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "applicableType",
+                    "instrumentIds",
+                    "status",
+                    "remark",
+                    "createdAt",
+                    "updatedAt"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "applicableType": {
+                        "type": "string"
+                    },
+                    "instrumentIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/DataStatus"
+                    },
+                    "remark": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                }
+            },
+            "InspectionReportSummary": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "reportCode",
+                    "reportName",
+                    "deviceName",
+                    "userOrganization",
+                    "templateName",
+                    "source",
+                    "status",
+                    "createdBy",
+                    "createdAt"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "reportCode": {
+                        "type": "string"
+                    },
+                    "reportName": {
+                        "type": "string"
+                    },
+                    "deviceName": {
+                        "type": "string"
+                    },
+                    "userOrganization": {
+                        "type": "string"
+                    },
+                    "templateName": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "$ref": "#/components/schemas/ReportSource"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ReportStatus"
+                    },
+                    "createdBy": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    }
+                }
+            },
+            "InspectionReportValidation": {
+                "type": "object",
+                "required": [
+                    "invalidFieldLabels",
+                    "missingFieldLabels",
+                    "nonConformingItemLabels",
+                    "unavailableInstrumentLabels"
+                ],
+                "properties": {
+                    "invalidFieldLabels": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "missingFieldLabels": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "nonConformingItemLabels": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "unavailableInstrumentLabels": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "DocumentChild": {
+                "type": "object",
+                "required": ["label", "fixed", "id", "pid", "sort"],
+                "properties": {
+                    "label": {
+                        "type": "string"
+                    },
+                    "fixed": {
+                        "type": "boolean"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "templateId": {
+                        "type": "string"
+                    },
+                    "pid": {
+                        "type": "integer"
+                    },
+                    "sort": {
+                        "type": "integer"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "不同报表组件对应的动态填写数据",
+                        "additionalProperties": true
+                    }
+                }
+            },
+            "DocumentSection": {
+                "type": "object",
+                "required": ["label", "fixed", "id", "children"],
+                "properties": {
+                    "label": {
+                        "type": "string"
+                    },
+                    "fixed": {
+                        "type": "boolean"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "sort": {
+                        "type": "integer"
+                    },
+                    "children": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DocumentChild"
+                        }
+                    }
+                }
+            },
+            "SaveInspectionReportRequest": {
+                "type": "object",
+                "required": [
+                    "reportCode",
+                    "reportName",
+                    "deviceName",
+                    "userOrganization",
+                    "templateName",
+                    "source",
+                    "status",
+                    "createdBy",
+                    "templateSnapshot",
+                    "deviceSnapshot",
+                    "toolboxSnapshot",
+                    "instrumentSnapshots",
+                    "documentData",
+                    "validation"
+                ],
+                "properties": {
+                    "reportCode": {
+                        "type": "string",
+                        "example": "REPORT-1786512000000"
+                    },
+                    "reportName": {
+                        "type": "string"
+                    },
+                    "deviceName": {
+                        "type": "string"
+                    },
+                    "userOrganization": {
+                        "type": "string"
+                    },
+                    "templateName": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "$ref": "#/components/schemas/ReportSource"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ReportStatus"
+                    },
+                    "createdBy": {
+                        "type": "string"
+                    },
+                    "templateSnapshot": {
+                        "$ref": "#/components/schemas/InspectionTemplate"
+                    },
+                    "deviceSnapshot": {
+                        "$ref": "#/components/schemas/Device"
+                    },
+                    "toolboxSnapshot": {
+                        "$ref": "#/components/schemas/Toolbox"
+                    },
+                    "instrumentSnapshots": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Instrument"
+                        }
+                    },
+                    "documentData": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DocumentSection"
+                        }
+                    },
+                    "validation": {
+                        "$ref": "#/components/schemas/InspectionReportValidation"
+                    }
+                }
+            },
+            "InspectionReport": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/SaveInspectionReportRequest"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["id", "createdAt", "updatedAt"],
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "createdAt": {
+                                "type": "string"
+                            },
+                            "updatedAt": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ]
+            },
+            "InspectionTemplateListData": {
+                "type": "object",
+                "required": ["items", "total"],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InspectionTemplateItem"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "DeviceListData": {
+                "type": "object",
+                "required": ["items", "total"],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Device"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "InspectionReportListData": {
+                "type": "object",
+                "required": ["items", "total"],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InspectionReportSummary"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "InspectionTemplateListResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponseBase"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["data"],
+                        "properties": {
+                            "data": {
+                                "$ref": "#/components/schemas/InspectionTemplateListData"
+                            }
+                        }
+                    }
+                ]
+            },
+            "InspectionTemplateResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponseBase"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["data"],
+                        "properties": {
+                            "data": {
+                                "$ref": "#/components/schemas/InspectionTemplate"
+                            }
+                        }
+                    }
+                ]
+            },
+            "ReportComponentListResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponseBase"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["data"],
+                        "properties": {
+                            "data": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ReportComponentDefinition"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "DeviceListResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponseBase"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["data"],
+                        "properties": {
+                            "data": {
+                                "$ref": "#/components/schemas/DeviceListData"
+                            }
+                        }
+                    }
+                ]
+            },
+            "DeviceResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponseBase"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["data"],
+                        "properties": {
+                            "data": {
+                                "$ref": "#/components/schemas/Device"
+                            }
+                        }
+                    }
+                ]
+            },
+            "ToolboxListResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponseBase"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["data"],
+                        "properties": {
+                            "data": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Toolbox"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "ToolboxResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponseBase"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["data"],
+                        "properties": {
+                            "data": {
+                                "$ref": "#/components/schemas/Toolbox"
+                            }
+                        }
+                    }
+                ]
+            },
+            "InstrumentListResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponseBase"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["data"],
+                        "properties": {
+                            "data": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Instrument"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "InspectionReportListResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponseBase"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["data"],
+                        "properties": {
+                            "data": {
+                                "$ref": "#/components/schemas/InspectionReportListData"
+                            }
+                        }
+                    }
+                ]
+            },
+            "InspectionReportResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponseBase"
+                    },
+                    {
+                        "type": "object",
+                        "required": ["data"],
+                        "properties": {
+                            "data": {
+                                "$ref": "#/components/schemas/InspectionReport"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

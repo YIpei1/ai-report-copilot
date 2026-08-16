@@ -1,9 +1,9 @@
 export const REPORT_BUSINESS_RULES = {
-    inspectionResult: {
+    inspectionConclusion: {
         standardValues: ['符合', '不符合'],
         passedValues: ['符合'],
         failedValues: ['不符合'],
-        aiInstruction: '检测结果只能整理为“符合”或“不符合”',
+        aiInstruction: '单项结论只能整理为“符合”或“不符合”',
     },
     instrumentStatus: {
         standardValues: ['可用', '不可用'],

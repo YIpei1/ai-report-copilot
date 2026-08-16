@@ -97,10 +97,10 @@ const validateInspectionItems = (
         const itemLabel = `检测项目-${itemCode}`
         const result = itemRecord?.result
         const conclusion = itemRecord?.conclusion
-        const resultStatus = validateReportBusinessValue('inspectionResult', result)
-        const conclusionStatus = validateReportBusinessValue('inspectionResult', conclusion)
+        const conclusionStatus = validateReportBusinessValue('inspectionConclusion', conclusion)
 
-        if (resultStatus === 'empty') {
+        // 检测结果允许填写任意现场数据或说明，但不能为空。
+        if (isBlank(result)) {
             missingFieldLabels.push(`${itemLabel}-检测结果`)
         }
 
@@ -108,15 +108,11 @@ const validateInspectionItems = (
             missingFieldLabels.push(`${itemLabel}-单项结论`)
         }
 
-        if (resultStatus === 'invalid') {
-            invalidFieldLabels.push(`${itemLabel}-检测结果`)
-        }
-
         if (conclusionStatus === 'invalid') {
             invalidFieldLabels.push(`${itemLabel}-单项结论`)
         }
 
-        if (resultStatus === 'failed' || conclusionStatus === 'failed') {
+        if (conclusionStatus === 'failed') {
             nonConformingItemLabels.push(itemLabel)
         }
     })
